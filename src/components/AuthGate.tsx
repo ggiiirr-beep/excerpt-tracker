@@ -51,7 +51,7 @@ export function AuthGate({ children }: { children: (user: User) => ReactNode }) 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + window.location.pathname,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
     if (error) {
