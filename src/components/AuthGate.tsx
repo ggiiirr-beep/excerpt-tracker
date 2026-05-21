@@ -16,13 +16,28 @@ export function AuthGate({ children }: { children: (user: User) => ReactNode }) 
       setLoading(false);
       return;
     }
+    const client = supabase;
 
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+    const finishAuth = async () => {
+      const code = new URLSearchParams(window.location.search).get('code');
+      if (code) {
+        const { data, error } = await client.auth.exchangeCodeForSession(code);
+        if (error) {
+          setMessage(error.message);
+        } else {
+          setSession(data.session);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } else {
+        const { data } = await client.auth.getSession();
+        setSession(data.session);
+      }
       setLoading(false);
-    });
+    };
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    finishAuth();
+
+    const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
     });
 
