@@ -10,41 +10,48 @@ type Section = {
   rating?: number;
 };
 
-export function buildSections(excerpts: Excerpt[]): Section[] {
-  return [
-    { key: 'focus', label: 'Focus', items: excerpts.filter((excerpt) => excerpt.isFocus), accent: true },
-    { key: 'new', label: 'New', items: excerpts.filter((excerpt) => excerpt.isNew) },
-    ...([1, 2, 3, 4, 5] as const).map((rating) => ({
-      key: String(rating),
-      label: `${rating} star`,
-      items: excerpts.filter((excerpt) => !excerpt.isNew && excerpt.confidenceRating === rating),
-      rating,
-    })),
-  ];
+function practicedTime(excerpt: Excerpt) {
+  if (!excerpt.lastPracticedDate) return 0;
+  return new Date(`${excerpt.lastPracticedDate}T12:00:00`).getTime();
+}
+
+export function sortOldestPracticedFirst(excerpts: Excerpt[]) {
+  return [...excerpts].sort((a, b) => {
+    const practicedDiff = practicedTime(a) - practicedTime(b);
+    if (practicedDiff !== 0) return practicedDiff;
+    return a.title.localeCompare(b.title);
+  });
+}
+
+export function buildPracticeGroups(excerpts: Excerpt[]): Section[] {
+  const ratings = [1, 2, 3, 4, 5] as const;
+  return ratings.map((rating) => ({
+    key: String(rating),
+    label: `${rating} star`,
+    items: sortOldestPracticedFirst(excerpts.filter((excerpt) => excerpt.confidenceRating === rating)),
+    rating,
+  }));
 }
 
 export function Dashboard({
   excerpts,
-  openSections,
-  onToggleSection,
   onOpenExcerpt,
+  onPracticeExcerpt,
   listFilterName,
   listOptions,
   selectedListId,
   onSelectList,
-  onOpenSection,
 }: {
   excerpts: Excerpt[];
-  openSections: Set<string>;
-  onToggleSection: (key: string) => void;
   onOpenExcerpt: (id: string) => void;
+  onPracticeExcerpt: (id: string) => void;
   listFilterName: string;
   listOptions: { id: string; name: string }[];
   selectedListId: string;
   onSelectList: (id: string) => void;
-  onOpenSection: (key: string) => void;
 }) {
-  const sections = buildSections(excerpts);
+  const focusItems = sortOldestPracticedFirst(excerpts.filter((excerpt) => excerpt.isFocus));
+  const groups = buildPracticeGroups(excerpts);
   const dateLine = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 
   return (
@@ -65,23 +72,75 @@ export function Dashboard({
         </select>
       </label>
 
-      {sections.map((section) => {
-        return (
-          <div className="accordion-section" key={section.key}>
-            <button
-              className="section-row section-link-row"
-              type="button"
-              aria-label={`Open ${section.label} section`}
-              onClick={() => onOpenSection(section.key)}
-            >
-              {section.accent && <Dot />}
-              <span>{section.rating ? <Stars rating={section.rating} size={16} /> : section.label}</span>
-              <strong>{section.items.length}</strong>
-              <b className="chevron">›</b>
-            </button>
-          </div>
-        );
-      })}
+      <PracticeGroup
+        label="Focus"
+        accent
+        items={focusItems}
+        onOpenExcerpt={onOpenExcerpt}
+        onPracticeExcerpt={onPracticeExcerpt}
+        emptyText="Nothing in focus yet."
+      />
+
+      <div className="all-excerpts-heading">
+        <p>All excerpts</p>
+        <span>Grouped by confidence · oldest practice first</span>
+      </div>
+
+      {groups.map((group) => (
+        <PracticeGroup
+          key={group.key}
+          rating={group.rating}
+          label={group.label}
+          items={group.items}
+          onOpenExcerpt={onOpenExcerpt}
+          onPracticeExcerpt={onPracticeExcerpt}
+          emptyText="Nothing here yet."
+        />
+      ))}
+    </section>
+  );
+}
+
+function PracticeGroup({
+  label,
+  rating,
+  accent = false,
+  items,
+  emptyText,
+  onOpenExcerpt,
+  onPracticeExcerpt,
+}: {
+  label: string;
+  rating?: number;
+  accent?: boolean;
+  items: Excerpt[];
+  emptyText: string;
+  onOpenExcerpt: (id: string) => void;
+  onPracticeExcerpt: (id: string) => void;
+}) {
+  return (
+    <section className="practice-group">
+      <header className="practice-group-header">
+        <div>
+          {accent && <Dot />}
+          {rating ? <Stars rating={rating} size={17} /> : <h2>{label}</h2>}
+        </div>
+        <span>{items.length}</span>
+      </header>
+      {items.length ? (
+        <div className="practice-group-list">
+          {items.map((excerpt) => (
+            <ExcerptCard
+              key={excerpt.id}
+              excerpt={excerpt}
+              onOpen={() => onOpenExcerpt(excerpt.id)}
+              onPractice={() => onPracticeExcerpt(excerpt.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="empty-row">{emptyText}</p>
+      )}
     </section>
   );
 }

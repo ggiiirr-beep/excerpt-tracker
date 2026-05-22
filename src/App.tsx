@@ -5,12 +5,10 @@ import { freshSampleData } from './lib/appData';
 import { repository } from './lib/repository';
 import { supabase } from './lib/supabaseClient';
 import { todayIso } from './lib/dates';
-import { Dot, makeId, Stars } from './components/Atoms';
+import { makeId } from './components/Atoms';
 import { AuthGate } from './components/AuthGate';
-import { BackupControls } from './components/BackupControls';
-import { Dashboard, buildSections } from './components/Dashboard';
+import { Dashboard } from './components/Dashboard';
 import { DetailView } from './components/DetailView';
-import { ExcerptCard } from './components/ExcerptCard';
 import { PracticeModal } from './components/PracticeModal';
 
 function SignedInApp({ user }: { user: User }) {
@@ -19,10 +17,7 @@ function SignedInApp({ user }: { user: User }) {
   const [syncMessage, setSyncMessage] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [practiceId, setPracticeId] = useState<string | null>(null);
-  const [selectedSection, setSelectedSection] = useState('focus');
-  const [mobileSectionId, setMobileSectionId] = useState<string | null>(null);
   const [selectedListId, setSelectedListId] = useState('all');
-  const [openSections, setOpenSections] = useState(() => new Set(['focus', 'new']));
   const [pendingRecordings, setPendingRecordings] = useState<Record<string, SessionRecording | null>>({});
 
   useEffect(() => {
@@ -66,8 +61,6 @@ function SignedInApp({ user }: { user: User }) {
     const ids = new Set(selectedList.excerptIds);
     return data.excerpts.filter((excerpt) => ids.has(excerpt.id));
   }, [data.excerpts, selectedList]);
-  const sections = useMemo(() => buildSections(visibleExcerpts), [visibleExcerpts]);
-  const currentSection = sections.find((section) => section.key === selectedSection) ?? sections[0];
 
   const updateExcerpt = (id: string, patch: Partial<Excerpt>) => {
     const nextData = {
@@ -78,21 +71,8 @@ function SignedInApp({ user }: { user: User }) {
   };
 
   const applyListFilter = (id: string) => {
-    const list = id === 'all' ? null : data.lists.find((item) => item.id === id) ?? null;
-    const filtered = list
-      ? data.excerpts.filter((excerpt) => new Set(list.excerptIds).has(excerpt.id))
-      : data.excerpts;
-    const nonEmptySections = buildSections(filtered).filter((section) => section.items.length > 0).map((section) => section.key);
     setSelectedListId(id);
     setSelectedId(null);
-    setMobileSectionId(null);
-    setSelectedSection(nonEmptySections[0] ?? 'focus');
-    setOpenSections(new Set(nonEmptySections.length ? nonEmptySections : ['focus']));
-  };
-
-  const renderSectionTitle = (section: typeof currentSection) => {
-    if (section.rating) return <Stars rating={section.rating} size={24} />;
-    return section.label;
   };
 
   const savePractice = (rating: ConfidenceRating, note: string) => {
@@ -130,37 +110,10 @@ function SignedInApp({ user }: { user: User }) {
             ))}
           </select>
         </div>
-        <div className="desktop-sections">
-          <p>Sections</p>
-          {sections.map((section) => (
-            <button
-              className={selectedSection === section.key && !selectedExcerpt ? 'active' : ''}
-              key={section.key}
-              onClick={() => {
-                setSelectedSection(section.key);
-                setSelectedId(null);
-                setMobileSectionId(null);
-              }}
-            >
-              {section.accent && <Dot />}
-              <span>{section.rating ? <Stars rating={section.rating} size={14} /> : section.label}</span>
-              <strong>{section.items.length}</strong>
-            </button>
-          ))}
-        </div>
         <p className="sidebar-quote">“The score is a map.<br />The practice is the territory.”</p>
         <div className="sync-panel">
           <span>{syncState === 'loading' ? 'Loading cloud data' : syncState === 'saving' ? 'Saving' : syncState === 'error' ? 'Sync issue' : 'Synced'}</span>
           {syncMessage && <small>{syncMessage}</small>}
-          <BackupControls
-            data={data}
-            onImport={async (backup) => {
-              await repository.importBackup(user.id, backup);
-              setData(backup);
-              setSelectedId(null);
-              setMobileSectionId(null);
-            }}
-          />
           <button type="button" onClick={() => supabase?.auth.signOut()}>Sign out</button>
         </div>
       </aside>
@@ -179,78 +132,15 @@ function SignedInApp({ user }: { user: User }) {
             }}
           />
         ) : (
-          <>
-            <div className="desktop-section-view">
-              <header className="section-header">
-                <p>{currentSection.accent && <Dot />} Section · {currentSection.items.length} {currentSection.items.length === 1 ? 'excerpt' : 'excerpts'}</p>
-                <h1>{renderSectionTitle(currentSection)}</h1>
-                <span>{currentSection.key === 'focus' ? 'Your shortlist - keep these warm.' : currentSection.key === 'new' ? 'Not started yet.' : `${currentSection.label} confidence.`}</span>
-              </header>
-              {currentSection.items.length ? (
-                <div className="desktop-card-grid">
-                  {currentSection.items.map((excerpt) => (
-                    <ExcerptCard
-                      key={excerpt.id}
-                      excerpt={excerpt}
-                      onOpen={() => setSelectedId(excerpt.id)}
-                      onPractice={() => setSelectedId(excerpt.id)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p className="empty-row">Nothing here yet.</p>
-              )}
-            </div>
-            {mobileSectionId && (() => {
-              const mobileSection = sections.find((section) => section.key === mobileSectionId) ?? sections[0];
-              return (
-                <div className="mobile-section-page">
-                  <button className="back-link" type="button" onClick={() => setMobileSectionId(null)}>‹ Sections</button>
-                  <header className="section-header">
-                    <p>{mobileSection.accent && <Dot />} Section · {mobileSection.items.length} {mobileSection.items.length === 1 ? 'excerpt' : 'excerpts'}</p>
-                    <h1>{renderSectionTitle(mobileSection)}</h1>
-                    <span>{selectedList ? selectedList.name : 'All excerpts'}</span>
-                  </header>
-                  {mobileSection.items.length ? (
-                    <div className="mobile-section-list">
-                      {mobileSection.items.map((excerpt) => (
-                        <ExcerptCard
-                          key={excerpt.id}
-                          excerpt={excerpt}
-                          onOpen={() => setSelectedId(excerpt.id)}
-                          onPractice={() => setSelectedId(excerpt.id)}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="empty-row">Nothing here yet.</p>
-                  )}
-                </div>
-              );
-            })()}
-            {!mobileSectionId && (
-              <Dashboard
-                excerpts={visibleExcerpts}
-                openSections={openSections}
-                onToggleSection={(key) => {
-                  setOpenSections((current) => {
-                    const next = new Set(current);
-                    next.has(key) ? next.delete(key) : next.add(key);
-                    return next;
-                  });
-                }}
-                onOpenExcerpt={setSelectedId}
-                listFilterName={selectedList ? selectedList.name : 'All excerpts'}
-                listOptions={data.lists}
-                selectedListId={selectedListId}
-                onSelectList={applyListFilter}
-                onOpenSection={(key) => {
-                  setSelectedSection(key);
-                  setMobileSectionId(key);
-                }}
-              />
-            )}
-          </>
+          <Dashboard
+            excerpts={visibleExcerpts}
+            onOpenExcerpt={setSelectedId}
+            onPracticeExcerpt={setPracticeId}
+            listFilterName={selectedList ? selectedList.name : 'All excerpts'}
+            listOptions={data.lists}
+            selectedListId={selectedListId}
+            onSelectList={applyListFilter}
+          />
         )}
       </main>
 
