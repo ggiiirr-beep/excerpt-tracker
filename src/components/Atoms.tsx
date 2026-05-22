@@ -36,7 +36,7 @@ export function StarPicker({
   return (
     <div className="star-picker">
       {[1, 2, 3, 4, 5].map((n) => (
-        <button key={n} type="button" onClick={() => onChange(n as 1 | 2 | 3 | 4 | 5)} aria-label={`${n} stars`}>
+        <button key={n} type="button" onClick={() => onChange(n as 1 | 2 | 3 | 4 | 5)} aria-label={`${n} ${n === 1 ? 'star' : 'stars'}`}>
           <Star filled={n <= value} size={size} />
         </button>
       ))}

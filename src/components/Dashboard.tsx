@@ -108,7 +108,7 @@ export function Dashboard({
           />
 
           <div className="all-excerpts-heading">
-            <p>All excerpts</p>
+            <p>{listFilterName}</p>
             <span>Grouped by confidence · oldest practice first</span>
           </div>
 

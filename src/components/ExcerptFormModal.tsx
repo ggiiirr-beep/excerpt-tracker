@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Excerpt, ExcerptConfidenceRating, ResourceLink } from '../types';
-import { FieldLabel, makeId, StarPicker, Stars } from './Atoms';
+import { FieldLabel, makeId, StarPicker } from './Atoms';
 
 type ExcerptFormValue = Pick<Excerpt, 'title' | 'confidenceRating' | 'isFocus' | 'notes' | 'resources'>;
 
@@ -83,7 +83,6 @@ export function ExcerptFormModal({
               No stars
             </button>
             <StarPicker value={confidenceRating} onChange={setConfidenceRating} size={24} />
-            {confidenceRating === 0 && <Stars rating={0} size={14} />}
           </div>
         </div>
 

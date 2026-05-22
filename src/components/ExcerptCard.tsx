@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Excerpt } from '../types';
 import { formatShortDate, relativePracticeDate } from '../lib/dates';
 import { Dot, Stars } from './Atoms';
@@ -18,6 +18,7 @@ export function ExcerptCard({
   onToggleFocus: () => void;
   onDelete: () => void;
 }) {
+  const cardRef = useRef<HTMLElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const recentPracticeDetails = excerpt.practiceHistory
@@ -30,11 +31,31 @@ export function ExcerptCard({
     setMenuOpen(false);
   };
 
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const closeMenuFromOutsideClick = (event: PointerEvent) => {
+      if (cardRef.current?.contains(event.target as Node)) return;
+      setMenuOpen(false);
+    };
+
+    document.addEventListener('pointerdown', closeMenuFromOutsideClick);
+    return () => document.removeEventListener('pointerdown', closeMenuFromOutsideClick);
+  }, [menuOpen]);
+
   return (
     <article
+      ref={cardRef}
       className={`excerpt-card${expanded ? ' expanded' : ''}`}
       aria-expanded={expanded}
+      tabIndex={0}
       onClick={toggleExpanded}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          toggleExpanded();
+        }
+      }}
     >
       <div className="card-main">
         <div className="title-row">
@@ -99,35 +120,29 @@ export function ExcerptCard({
       >
         Practice
       </button>
-      {expanded && (
+      {expanded && hasExpandedContent && (
         <div className="card-expanded">
-          {hasExpandedContent ? (
-            <>
-              {excerpt.notes.trim() && (
-                <div className="card-expanded-block">
-                  <span className="card-expanded-label">Excerpt notes</span>
-                  <p>{excerpt.notes}</p>
-                </div>
-              )}
-              {recentPracticeDetails.map((entry) => (
-                <div className="card-expanded-block" key={entry.id}>
-                  <span className="card-expanded-label">{formatShortDate(entry.date)}</span>
-                  {entry.note.trim() && <p>{entry.note}</p>}
-                  {entry.recording && (
-                    <audio
-                      controls
-                      src={entry.recording.dataUrl}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <a href={entry.recording.dataUrl}>Open recording</a>
-                    </audio>
-                  )}
-                </div>
-              ))}
-            </>
-          ) : (
-            <p className="card-expanded-empty">No notes or recordings yet.</p>
+          {excerpt.notes.trim() && (
+            <div className="card-expanded-block">
+              <span className="card-expanded-label">Excerpt notes</span>
+              <p>{excerpt.notes}</p>
+            </div>
           )}
+          {recentPracticeDetails.map((entry) => (
+            <div className="card-expanded-block" key={entry.id}>
+              <span className="card-expanded-label">{formatShortDate(entry.date)}</span>
+              {entry.note.trim() && <p>{entry.note}</p>}
+              {entry.recording && (
+                <audio
+                  controls
+                  src={entry.recording.dataUrl}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <a href={entry.recording.dataUrl}>Open recording</a>
+                </audio>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </article>
