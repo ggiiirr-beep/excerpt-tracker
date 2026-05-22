@@ -24,10 +24,10 @@ export function sortOldestPracticedFirst(excerpts: Excerpt[]) {
 }
 
 export function buildPracticeGroups(excerpts: Excerpt[]): Section[] {
-  const ratings = [1, 2, 3, 4, 5] as const;
+  const ratings = [0, 1, 2, 3, 4, 5] as const;
   return ratings.map((rating) => ({
     key: String(rating),
-    label: `${rating} star`,
+    label: rating === 0 ? 'No stars' : `${rating} star`,
     items: sortOldestPracticedFirst(excerpts.filter((excerpt) => excerpt.confidenceRating === rating)),
     rating,
   }));
@@ -68,7 +68,7 @@ export function Dashboard({
 
       <div className="dashboard-actions">
         <button className="pill-button" type="button" onClick={onCreateExcerpt}>New excerpt</button>
-        <button className="small-button" type="button" onClick={onOpenLists}>Lists</button>
+        <button className="small-button" type="button" onClick={onOpenLists}>Edit lists</button>
       </div>
 
       <label className="mobile-list-filter">
@@ -142,7 +142,8 @@ function PracticeGroup({
       <header className="practice-group-header">
         <div>
           {accent && <Dot />}
-          {rating ? <Stars rating={rating} size={17} /> : <h2>{label}</h2>}
+          {rating !== undefined ? <Stars rating={rating} size={17} /> : <h2>{label}</h2>}
+          {rating === 0 && <span className="unrated-label">No stars</span>}
         </div>
         <span>{items.length}</span>
       </header>

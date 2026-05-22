@@ -134,52 +134,75 @@ function ListCard({
   onDelete: () => void;
 }) {
   const [nameDraft, setNameDraft] = useState(list.name);
+  const [excerptIdsDraft, setExcerptIdsDraft] = useState(list.excerptIds);
+  const [isEditing, setIsEditing] = useState(isSelected);
   const [error, setError] = useState('');
 
   useEffect(() => {
     setNameDraft(list.name);
+    setExcerptIdsDraft(list.excerptIds);
     setError('');
-  }, [list.name]);
+  }, [list.name, list.excerptIds]);
 
-  const saveName = () => {
+  const saveList = () => {
     const message = onRename(list.id, nameDraft);
     if (message) {
       setError(message);
       setNameDraft(list.name);
+      return;
     }
+    onUpdate(list.id, { excerptIds: excerptIdsDraft });
+    setIsEditing(false);
+  };
+
+  const toggleExcerpt = (id: string, checked: boolean) => {
+    setExcerptIdsDraft((current) => (
+      checked ? [...new Set([...current, id])] : current.filter((excerptId) => excerptId !== id)
+    ));
   };
 
   return (
     <article className={isSelected ? 'list-card active-list-card' : 'list-card'}>
-      <input value={nameDraft} onChange={(event) => setNameDraft(event.target.value)} onBlur={saveName} />
-      {error && <p className="error-text">{error}</p>}
-      {excerpts.length ? (
-        <div className="list-members">
-          {excerpts.map((excerpt) => {
-            const checked = list.excerptIds.includes(excerpt.id);
-            return (
-              <label key={excerpt.id}>
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={(event) => {
-                    const excerptIds = event.target.checked
-                      ? [...list.excerptIds, excerpt.id]
-                      : list.excerptIds.filter((id) => id !== excerpt.id);
-                    onUpdate(list.id, { excerptIds });
-                  }}
-                />
-                <span>{excerpt.title}</span>
-              </label>
-            );
-          })}
-        </div>
+      {isEditing ? (
+        <input value={nameDraft} onChange={(event) => setNameDraft(event.target.value)} />
       ) : (
-        <p className="quiet-empty">No matching excerpts.</p>
+        <div className="list-card-summary">
+          <h2>{list.name}</h2>
+          <span>{list.excerptIds.length} {list.excerptIds.length === 1 ? 'excerpt' : 'excerpts'}</span>
+        </div>
       )}
-      <button className="text-button align-left" type="button" onClick={onDelete}>
-        Delete list
-      </button>
+      {error && <p className="error-text">{error}</p>}
+      {isEditing && (
+        excerpts.length ? (
+          <div className="list-members">
+            {excerpts.map((excerpt) => {
+              const checked = excerptIdsDraft.includes(excerpt.id);
+              return (
+                <label key={excerpt.id}>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(event) => toggleExcerpt(excerpt.id, event.target.checked)}
+                  />
+                  <span>{excerpt.title}</span>
+                </label>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="quiet-empty">No matching excerpts.</p>
+        )
+      )}
+      <div className="list-card-actions">
+        {isEditing ? (
+          <button className="pill-button" type="button" onClick={saveList}>Save list</button>
+        ) : (
+          <button className="small-button" type="button" onClick={() => setIsEditing(true)}>Edit</button>
+        )}
+        <button className="text-button align-left" type="button" onClick={onDelete}>
+          Delete list
+        </button>
+      </div>
     </article>
   );
 }

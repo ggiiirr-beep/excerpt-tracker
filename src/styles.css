@@ -88,6 +88,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .focus-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: 0 0 6px; }
 .card-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; color: var(--muted); font-size: 12px; }
 .stars { display: inline-flex; gap: 2px; color: var(--ink); }
+.stars-unrated { color: var(--muted); opacity: 0.72; }
+.unrated-label { font-family: var(--font-display); font-style: italic; color: var(--muted); }
 .pill-button, .primary-button, .small-button { border: 0; background: var(--ink); color: var(--paper); min-height: 44px; padding: 12px 18px; border-radius: 999px; cursor: pointer; }
 .small-button { background: rgba(31, 26, 20, 0.08); color: var(--ink); }
 .primary-button { width: 100%; border-radius: 14px; min-height: 56px; font-size: 16px; }
@@ -167,6 +169,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .list-card { padding: 18px; margin-bottom: 14px; }
 .active-list-card { border-color: var(--divider-strong); box-shadow: inset 3px 0 0 var(--accent); }
 .list-card > input { font-family: var(--font-display); font-size: 22px; margin-bottom: 14px; }
+.list-card-summary { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.list-card-summary h2 { margin: 0; font-size: 24px; }
+.list-card-summary span { color: var(--muted); font-size: 13px; }
+.list-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
 .list-search { margin: 0 0 18px; }
 .list-search input { width: 100%; min-height: 44px; background: var(--card); border: 0.5px solid var(--divider); border-radius: 8px; padding: 12px 14px; color: var(--ink); }
 .list-members { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
@@ -194,6 +200,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .excerpt-form-modal header h2, .list-form-modal h2 { margin: 0; font-family: var(--font-display); font-size: 32px; font-weight: 400; }
 .excerpt-form-modal .form-block { margin-top: 18px; }
 .excerpt-form-modal .star-picker { justify-content: flex-start; }
+.rating-choice-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.active-rating { box-shadow: inset 0 0 0 1px var(--accent); }
 .excerpt-form-modal .form-check-row { margin-top: 16px; }
 .excerpt-form-modal .resource-row { grid-template-columns: minmax(120px, 0.45fr) 1fr auto; }
 .modal-actions { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 24px; }
@@ -221,11 +229,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   .app-shell { display: block; }
   .sidebar { display: none; }
   .main-pane { height: auto; overflow: visible; }
-  .mobile-app-bar { position: sticky; top: 0; z-index: 10; min-height: 62px; padding: 10px 14px; border-bottom: 0.5px solid var(--divider-strong); background: rgba(235, 229, 215, 0.96); display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 8px; }
+  .mobile-app-bar { position: sticky; top: 0; z-index: 10; min-height: 62px; padding: 10px 14px; border-bottom: 0.5px solid var(--divider-strong); background: rgba(235, 229, 215, 0.96); display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px; }
   .mobile-app-bar .brand-icon-button { border: 0; background: transparent; padding: 0; width: 40px; height: 40px; }
   .mobile-app-bar img { width: 40px; height: 40px; border-radius: 10px; display: block; }
   .mobile-app-bar strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-size: 20px; font-weight: 500; }
-  .mobile-app-bar button:not(.brand-icon-button) { border: 0; min-height: 38px; border-radius: 999px; background: rgba(31, 26, 20, 0.08); color: var(--ink); padding: 8px 11px; }
   .dashboard { padding: 20px 18px 90px; }
   .mobile-list-filter { display: block; margin: -6px 0 14px; }
   .mobile-list-filter span { display: block; margin: 0 0 8px; color: var(--muted); font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; font-weight: 600; }

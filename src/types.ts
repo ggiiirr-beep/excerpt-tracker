@@ -1,4 +1,5 @@
 export type ConfidenceRating = 1 | 2 | 3 | 4 | 5;
+export type ExcerptConfidenceRating = 0 | ConfidenceRating;
 
 export type ResourceLink = {
   id: string;
@@ -29,7 +30,7 @@ export type SessionRecording = {
 export type Excerpt = {
   id: string;
   title: string;
-  confidenceRating: ConfidenceRating;
+  confidenceRating: ExcerptConfidenceRating;
   isNew: boolean;
   isFocus: boolean;
   practiceCount: number;

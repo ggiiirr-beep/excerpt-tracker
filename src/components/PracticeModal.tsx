@@ -11,7 +11,7 @@ export function PracticeModal({
   onClose: () => void;
   onSave: (rating: ConfidenceRating, note: string) => void;
 }) {
-  const [rating, setRating] = useState<ConfidenceRating>(excerpt.confidenceRating);
+  const [rating, setRating] = useState<ConfidenceRating>(excerpt.confidenceRating || 1);
   const [note, setNote] = useState('');
 
   return (

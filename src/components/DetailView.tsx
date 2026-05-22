@@ -1,7 +1,7 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import type { Excerpt, RepertoireList, ResourceLink, SessionRecording } from '../types';
 import { formatDate, formatShortDate, relativePracticeDate } from '../lib/dates';
-import { confidenceLabel, FieldLabel, StarPicker, Stars } from './Atoms';
+import { confidenceLabel, FieldLabel, Stars } from './Atoms';
 
 export function DetailView({
   excerpt,
@@ -116,7 +116,7 @@ export function DetailView({
         <p className="cue-kicker">{excerpt.tags[0] || 'Excerpt'}</p>
         <h1>{excerpt.title}</h1>
         <div className="cue-stars">
-          <StarPicker value={excerpt.confidenceRating} onChange={(confidenceRating) => onChange({ confidenceRating })} size={26} />
+          <Stars rating={excerpt.confidenceRating} size={26} />
           <p>{confidenceLabel(excerpt.confidenceRating)}</p>
         </div>
 
@@ -164,7 +164,7 @@ export function DetailView({
         <input ref={fileInputRef} type="file" accept="application/pdf" hidden onChange={attachPdf} />
       </div>
 
-      <button className="primary-button practice-wide" type="button" onClick={onPractice}>Practice finished</button>
+      <button className="primary-button practice-wide" type="button" onClick={onPractice}>Log practice</button>
 
       <div className="details-panel">
         <label className="focus-check-row">

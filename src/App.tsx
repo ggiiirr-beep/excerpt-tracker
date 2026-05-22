@@ -206,7 +206,7 @@ function SignedInApp({ user }: { user: User }) {
           setSelectedId(null);
           setView('lists');
         }}>
-          Lists
+          Edit lists
         </button>
         <div className="sidebar-excerpt-list">
           <p>Excerpts</p>
@@ -241,13 +241,6 @@ function SignedInApp({ user }: { user: User }) {
           <img src={logoUrl} alt="" />
         </button>
         <strong>Excerpt Tracker</strong>
-        <button type="button" onClick={openCreateExcerpt}>New</button>
-        <button type="button" onClick={() => {
-          setSelectedId(null);
-          setView('lists');
-        }}>
-          Lists
-        </button>
       </header>
 
       <main className="main-pane">
@@ -278,7 +271,7 @@ function SignedInApp({ user }: { user: User }) {
           <Dashboard
             excerpts={visibleExcerpts}
             onOpenExcerpt={setSelectedId}
-            onPracticeExcerpt={setPracticeId}
+            onPracticeExcerpt={setSelectedId}
             onCreateExcerpt={openCreateExcerpt}
             onOpenLists={() => setView('lists')}
             listFilterName={selectedList ? selectedList.name : 'All excerpts'}

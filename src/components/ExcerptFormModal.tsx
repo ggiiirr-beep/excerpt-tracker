@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { ConfidenceRating, Excerpt, ResourceLink } from '../types';
-import { FieldLabel, makeId, StarPicker } from './Atoms';
+import type { Excerpt, ExcerptConfidenceRating, ResourceLink } from '../types';
+import { FieldLabel, makeId, StarPicker, Stars } from './Atoms';
 
 type ExcerptFormValue = Pick<Excerpt, 'title' | 'confidenceRating' | 'isFocus' | 'notes' | 'tags' | 'resources'>;
 
@@ -20,14 +20,14 @@ export function ExcerptFormModal({
   onSave: (value: ExcerptFormValue) => void;
 }) {
   const [title, setTitle] = useState(initialValue?.title ?? '');
-  const [confidenceRating, setConfidenceRating] = useState<ConfidenceRating>(initialValue?.confidenceRating ?? 1);
+  const [confidenceRating, setConfidenceRating] = useState<ExcerptConfidenceRating>(initialValue?.confidenceRating ?? 0);
   const [isFocus, setIsFocus] = useState(initialValue?.isFocus ?? false);
   const [notes, setNotes] = useState(initialValue?.notes ?? '');
   const [tags, setTags] = useState(initialValue?.tags.join(', ') ?? '');
   const [resources, setResources] = useState<ResourceLink[]>(initialValue?.resources.length ? initialValue.resources : []);
   const [error, setError] = useState('');
   const isDirty = title !== (initialValue?.title ?? '')
-    || confidenceRating !== (initialValue?.confidenceRating ?? 1)
+    || confidenceRating !== (initialValue?.confidenceRating ?? 0)
     || isFocus !== (initialValue?.isFocus ?? false)
     || notes !== (initialValue?.notes ?? '')
     || tags !== (initialValue?.tags.join(', ') ?? '')
@@ -84,7 +84,13 @@ export function ExcerptFormModal({
 
         <div className="form-block">
           <FieldLabel>Confidence</FieldLabel>
-          <StarPicker value={confidenceRating} onChange={setConfidenceRating} size={24} />
+          <div className="rating-choice-row">
+            <button className={confidenceRating === 0 ? 'small-button active-rating' : 'small-button'} type="button" onClick={() => setConfidenceRating(0)}>
+              No stars
+            </button>
+            <StarPicker value={confidenceRating} onChange={setConfidenceRating} size={24} />
+            {confidenceRating === 0 && <Stars rating={0} size={14} />}
+          </div>
         </div>
 
         <label className="check-row form-check-row">

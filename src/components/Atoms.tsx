@@ -16,7 +16,7 @@ export function Star({ filled, size = 14 }: { filled: boolean; size?: number }) 
 
 export function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
   return (
-    <span className="stars" aria-label={`${rating} of 5 stars`}>
+    <span className={rating === 0 ? 'stars stars-unrated' : 'stars'} aria-label={rating === 0 ? 'No star rating' : `${rating} of 5 stars`}>
       {[1, 2, 3, 4, 5].map((n) => (
         <Star key={n} filled={n <= rating} size={size} />
       ))}
@@ -53,7 +53,7 @@ export function FieldLabel({ children }: { children: ReactNode }) {
 }
 
 export function confidenceLabel(value: number) {
-  return ['', 'needs work', 'shaky', 'coming along', 'solid', 'audition-ready'][value] || 'tap a star to rate';
+  return ['not rated', 'needs work', 'shaky', 'coming along', 'solid', 'audition-ready'][value] || 'tap a star to rate';
 }
 
 export function makeId(prefix: string) {
