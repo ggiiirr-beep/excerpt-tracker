@@ -77,6 +77,17 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .dashboard-empty { margin-top: 28px; background: var(--card); border: 0.5px solid var(--divider); border-radius: 8px; padding: 26px; }
 .dashboard-empty h2 { margin: 0 0 8px; font-size: 28px; }
 .dashboard-empty p { margin: 0 0 18px; color: var(--muted); font-family: var(--font-display); font-style: italic; }
+.dashboard-skeleton { margin-top: 28px; animation: fadeIn 180ms ease; }
+.skeleton-focus { margin-top: 8px; }
+.skeleton-heading { min-height: 50px; border-bottom: 0.5px solid var(--divider); display: flex; align-items: center; gap: 10px; }
+.skeleton-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(122, 46, 46, 0.55); }
+.skeleton-card { min-height: 135px; padding: 18px 20px; border: 0.5px solid var(--divider); border-radius: 8px; background: rgba(251, 248, 240, 0.62); display: grid; align-content: start; gap: 13px; }
+.skeleton-card-short { margin-top: 14px; min-height: 54px; }
+.skeleton-line { display: block; border-radius: 999px; background: linear-gradient(90deg, rgba(31, 26, 20, 0.06), rgba(31, 26, 20, 0.12), rgba(31, 26, 20, 0.06)); background-size: 220% 100%; animation: skeletonPulse 1.4s ease-in-out infinite; }
+.skeleton-line-title { width: min(210px, 58%); height: 22px; }
+.skeleton-line-meta { width: min(260px, 70%); height: 14px; }
+.skeleton-line-count { width: 24px; height: 18px; margin-left: auto; }
+.skeleton-line-button { width: 100%; height: 44px; margin-top: 8px; background-color: rgba(31, 26, 20, 0.1); }
 
 .practice-group { margin-top: 28px; }
 .practice-group-header { min-height: 50px; border-bottom: 0.5px solid var(--divider); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -247,6 +258,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes skeletonPulse {
+  0% { background-position: 120% 0; }
+  100% { background-position: -120% 0; }
 }
 
 @media (max-width: 719px) {

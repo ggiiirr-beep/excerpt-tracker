@@ -46,6 +46,7 @@ export function Dashboard({
   listOptions,
   selectedListId,
   onSelectList,
+  isLoading,
 }: {
   excerpts: Excerpt[];
   onPracticeExcerpt: (id: string) => void;
@@ -59,17 +60,21 @@ export function Dashboard({
   listOptions: { id: string; name: string }[];
   selectedListId: string;
   onSelectList: (id: string) => void;
+  isLoading: boolean;
 }) {
   const focusItems = sortOldestPracticedFirst(excerpts.filter((excerpt) => excerpt.isFocus));
   const groups = buildPracticeGroups(excerpts).filter((group) => group.items.length > 0);
   const dateLine = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+  const summaryText = isLoading
+    ? 'Loading your excerpts'
+    : `${listFilterName} · ${excerpts.filter((excerpt) => excerpt.isFocus).length} in focus · ${excerpts.length} total`;
 
   return (
     <section className="dashboard">
       <header className="mobile-header">
         <p>{dateLine}</p>
         <h1>Excerpts</h1>
-        <span>{listFilterName} · {excerpts.filter((excerpt) => excerpt.isFocus).length} in focus · {excerpts.length} total</span>
+        <span>{summaryText}</span>
       </header>
 
       <div className="dashboard-actions">
@@ -87,7 +92,9 @@ export function Dashboard({
         </select>
       </label>
 
-      {!excerpts.length ? (
+      {isLoading ? (
+        <DashboardSkeleton />
+      ) : !excerpts.length ? (
         <div className="dashboard-empty">
           <h2>No excerpts yet</h2>
           <p>Create your first excerpt, then it will show up here by confidence level.</p>
@@ -129,6 +136,36 @@ export function Dashboard({
         </>
       )}
     </section>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="dashboard-skeleton" aria-label="Loading excerpts">
+      <div className="skeleton-focus">
+        <div className="skeleton-heading">
+          <span className="skeleton-dot" />
+          <span className="skeleton-line skeleton-line-title" />
+          <span className="skeleton-line skeleton-line-count" />
+        </div>
+        <div className="skeleton-card skeleton-card-short" />
+      </div>
+
+      <div className="all-excerpts-heading">
+        <p>Loading</p>
+        <span>Preparing your practice list</span>
+      </div>
+
+      <div className="practice-group-list">
+        {[0, 1, 2].map((item) => (
+          <div className="skeleton-card" key={item}>
+            <span className="skeleton-line skeleton-line-title" />
+            <span className="skeleton-line skeleton-line-meta" />
+            <span className="skeleton-line skeleton-line-button" />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

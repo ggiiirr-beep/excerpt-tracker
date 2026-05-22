@@ -336,6 +336,7 @@ function SignedInApp({ user }: { user: User }) {
             listOptions={data.lists}
             selectedListId={selectedListId}
             onSelectList={applyListFilter}
+            isLoading={syncState === 'loading'}
           />
         )}
       </main>
