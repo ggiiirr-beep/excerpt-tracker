@@ -137,8 +137,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .star-picker button { border: 0; background: transparent; color: var(--ink); min-width: 44px; min-height: 44px; display: grid; place-items: center; cursor: pointer; }
 .practice-wide { margin: 24px 0; }
 .detail-edit-button { width: 100%; margin-top: -12px; }
-.cue-tools { margin: 22px auto 0; width: min(100%, 420px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; color: var(--muted); }
-.cue-tool { min-width: 0; display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; padding: 0; }
+.cue-tools { margin: 22px auto 0; width: min(100%, 420px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 8px; color: var(--muted); }
+.cue-tool { min-width: 0; display: flex; align-items: flex-start; justify-content: center; gap: 4px; flex-wrap: wrap; padding: 0; }
 .cue-tool a, .cue-tool button { width: 100%; min-height: 36px; border: 0.5px solid rgba(31, 26, 20, 0.09); border-radius: 999px; background: rgba(31, 26, 20, 0.025); color: var(--muted); text-decoration: none; padding: 7px 10px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; font-size: 13px; }
 .cue-tool a { max-width: 100%; color: var(--ink); }
 .cue-tool span { color: var(--accent); font-family: var(--font-ui); font-size: 10px; font-weight: 700; letter-spacing: 0.7px; }
