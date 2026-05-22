@@ -21,12 +21,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 
 .app-shell { min-height: 100dvh; display: flex; background: var(--paper); }
 .mobile-app-bar { display: none; }
-.sidebar { width: 268px; flex: 0 0 268px; min-height: 100dvh; position: sticky; top: 0; padding: 28px 16px 22px; background: var(--paper-2); border-right: 0.5px solid var(--divider-strong); display: flex; flex-direction: column; gap: 14px; }
+.sidebar { width: 268px; flex: 0 0 268px; min-height: 100dvh; position: sticky; top: 0; padding: 28px 16px 22px; background: var(--paper-2); border-right: 0.5px solid var(--divider-strong); display: flex; flex-direction: column; gap: 14px; transition: width 0.18s ease, flex-basis 0.18s ease, padding 0.18s ease; }
 .brand-mark { min-height: 54px; padding: 0 6px; display: flex; align-items: center; gap: 10px; }
 .sidebar .brand-icon-button { border: 0; background: transparent; color: var(--ink); min-height: 42px; width: 42px; padding: 0; display: grid; place-items: center; cursor: pointer; border-radius: 10px; }
 .sidebar .brand-icon-button:hover { background: rgba(31, 26, 20, 0.06); }
 .brand-icon-button img { width: 42px; height: 42px; border-radius: 10px; object-fit: cover; box-shadow: 0 4px 14px rgba(31, 26, 20, 0.12); }
 .brand-mark span { min-width: 0; }
+.sidebar-toggle { margin-left: auto; width: 36px; min-height: 36px !important; padding: 0 !important; display: grid; place-items: center; text-align: center !important; font-size: 24px; line-height: 1; }
 .brand { display: flex; align-items: baseline; gap: 8px; padding: 0 6px; }
 .brand strong, h1, h2, h3 { font-family: var(--font-display); font-weight: 500; letter-spacing: 0; }
 .brand strong, .brand-mark strong { font-size: 22px; }
@@ -49,6 +50,16 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .backup-controls { display: flex; flex-wrap: wrap; gap: 6px; }
 .backup-controls span { flex-basis: 100%; color: var(--muted); }
 .main-pane { flex: 1; min-width: 0; height: 100dvh; overflow: auto; }
+.sidebar-collapsed .sidebar { width: 74px; flex-basis: 74px; padding: 28px 10px 22px; align-items: center; }
+.sidebar-collapsed .brand-mark { padding: 0; flex-direction: column; gap: 12px; }
+.sidebar-collapsed .brand-mark span,
+.sidebar-collapsed .sidebar-count,
+.sidebar-collapsed .desktop-list-filter,
+.sidebar-collapsed .sidebar > button,
+.sidebar-collapsed .sidebar-excerpt-list,
+.sidebar-collapsed .sidebar-quote,
+.sidebar-collapsed .sync-panel { display: none; }
+.sidebar-collapsed .sidebar-toggle { margin-left: 0; }
 
 .dashboard, .library-view, .lists-view, .data-tools, .detail-view { max-width: 1100px; margin: 0 auto; padding: 32px 32px 80px; }
 .section-header { margin-bottom: 24px; }
@@ -95,6 +106,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .card-expanded p { margin: 0; color: var(--ink); font-family: var(--font-display); font-size: 17px; line-height: 1.35; }
 .card-expanded audio { width: 100%; height: 34px; }
 .card-expanded-empty { color: var(--muted) !important; font-style: italic; }
+.excerpt-card .pill-button { flex: 0 0 100%; }
 .title-row { display: flex; align-items: baseline; gap: 8px; }
 .title-row h3 { margin: 0; font-size: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .focus-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: 0 0 6px; }
@@ -239,6 +251,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 
 @media (max-width: 719px) {
   .app-shell { display: block; }
+  .sidebar-collapsed .sidebar,
   .sidebar { display: none; }
   .main-pane { height: auto; overflow: visible; }
   .mobile-app-bar { position: sticky; top: 0; z-index: 10; min-height: 62px; padding: 10px 14px; border-bottom: 0.5px solid var(--divider-strong); background: rgba(235, 229, 215, 0.96); display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px; }

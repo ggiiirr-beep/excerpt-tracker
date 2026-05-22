@@ -62,6 +62,27 @@ export function DetailView({
     ? `${Math.max(1, Math.round(excerpt.pdfAttachment.size / 1024))} KB`
     : '';
 
+  const pdfObjectUrl = useMemo(() => {
+    if (!excerpt.pdfAttachment) return null;
+    const [metadata, base64Data] = excerpt.pdfAttachment.dataUrl.split(',');
+    if (!base64Data) return excerpt.pdfAttachment.dataUrl;
+
+    const mimeType = metadata.match(/data:(.*);base64/)?.[1] || 'application/pdf';
+    const binary = atob(base64Data);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+
+    return URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+  }, [excerpt.pdfAttachment]);
+
+  useEffect(() => {
+    return () => {
+      if (pdfObjectUrl?.startsWith('blob:')) URL.revokeObjectURL(pdfObjectUrl);
+    };
+  }, [pdfObjectUrl]);
+
   const startRecording = async () => {
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
       setRecordingState('blocked');
@@ -126,7 +147,7 @@ export function DetailView({
           <div className="cue-tool">
             {excerpt.pdfAttachment ? (
               <>
-                <a href={excerpt.pdfAttachment.dataUrl} target="_blank" rel="noreferrer">
+                <a href={pdfObjectUrl ?? excerpt.pdfAttachment.dataUrl} target="_blank" rel="noreferrer">
                   <span>PDF</span>
                   <strong>{excerpt.pdfAttachment.name}</strong>
                   <em>{pdfSize}</em>

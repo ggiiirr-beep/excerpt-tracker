@@ -26,6 +26,7 @@ function SignedInApp({ user }: { user: User }) {
   const [editExcerptId, setEditExcerptId] = useState<string | null>(null);
   const [listMembershipExcerptId, setListMembershipExcerptId] = useState<string | null>(null);
   const [selectedListId, setSelectedListId] = useState('all');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [pendingRecordings, setPendingRecordings] = useState<Record<string, SessionRecording | null>>({});
 
   useEffect(() => {
@@ -225,7 +226,7 @@ function SignedInApp({ user }: { user: User }) {
   };
 
   return (
-    <div className="app-shell">
+    <div className={sidebarCollapsed ? 'app-shell sidebar-collapsed' : 'app-shell'}>
       <aside className="sidebar">
         <div className="brand-mark">
           <button className="brand-icon-button" type="button" onClick={goHome} aria-label="Go to main list">
@@ -234,6 +235,15 @@ function SignedInApp({ user }: { user: User }) {
           <span>
             <strong>Excerpt Tracker</strong>
           </span>
+          <button
+            className="sidebar-toggle"
+            type="button"
+            onClick={() => setSidebarCollapsed((current) => !current)}
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-expanded={!sidebarCollapsed}
+          >
+            {sidebarCollapsed ? '›' : '‹'}
+          </button>
         </div>
         <p className="sidebar-count">{selectedList ? selectedList.name : 'All excerpts'} · {visibleExcerpts.filter((excerpt) => excerpt.isFocus).length} in focus · {visibleExcerpts.length} total</p>
         <div className="desktop-list-filter">
