@@ -2,15 +2,15 @@
   "name": "Excerpt Tracker",
   "short_name": "Excerpt Tracker",
   "description": "A calm repertoire confidence tracker for orchestral excerpts.",
-  "start_url": "./index.html",
-  "scope": "./",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#F2EEE3",
   "theme_color": "#F2EEE3",
   "icons": [
-    { "src": "app-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "app-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "app-icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/app-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/app-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/app-icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
