@@ -1,6 +1,6 @@
 {
   "name": "Excerpt Tracker",
-  "short_name": "Excerpts",
+  "short_name": "Excerpt Tracker",
   "description": "A calm repertoire confidence tracker for orchestral excerpts.",
   "start_url": "./index.html",
   "scope": "./",

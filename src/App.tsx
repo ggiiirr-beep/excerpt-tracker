@@ -169,13 +169,14 @@ function SignedInApp({ user }: { user: User }) {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <button className="brand-button" type="button" onClick={goHome} aria-label="Go to main list">
-          <img src={logoUrl} alt="" />
+        <div className="brand-mark">
+          <button className="brand-icon-button" type="button" onClick={goHome} aria-label="Go to main list">
+            <img src={logoUrl} alt="" />
+          </button>
           <span>
-            <strong>Excerpts</strong>
-            <em>a tracker</em>
+            <strong>Excerpt Tracker</strong>
           </span>
-        </button>
+        </div>
         <p className="sidebar-count">{selectedList ? selectedList.name : 'All excerpts'} · {visibleExcerpts.filter((excerpt) => excerpt.isFocus).length} in focus · {visibleExcerpts.length} total</p>
         <div className="desktop-list-filter">
           <p>List</p>
