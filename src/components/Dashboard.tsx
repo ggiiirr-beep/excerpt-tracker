@@ -37,6 +37,8 @@ export function Dashboard({
   excerpts,
   onOpenExcerpt,
   onPracticeExcerpt,
+  onCreateExcerpt,
+  onOpenLists,
   listFilterName,
   listOptions,
   selectedListId,
@@ -45,6 +47,8 @@ export function Dashboard({
   excerpts: Excerpt[];
   onOpenExcerpt: (id: string) => void;
   onPracticeExcerpt: (id: string) => void;
+  onCreateExcerpt: () => void;
+  onOpenLists: () => void;
   listFilterName: string;
   listOptions: { id: string; name: string }[];
   selectedListId: string;
@@ -61,6 +65,11 @@ export function Dashboard({
         <h1>Excerpts</h1>
         <span>{listFilterName} · {excerpts.filter((excerpt) => excerpt.isFocus).length} in focus · {excerpts.length} total</span>
       </header>
+
+      <div className="dashboard-actions">
+        <button className="pill-button" type="button" onClick={onCreateExcerpt}>New excerpt</button>
+        <button className="small-button" type="button" onClick={onOpenLists}>Lists</button>
+      </div>
 
       <label className="mobile-list-filter">
         <span>List</span>

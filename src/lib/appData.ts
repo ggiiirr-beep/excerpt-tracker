@@ -1,14 +1,30 @@
 import type { AppData } from '../types';
 import { sampleData } from './sampleData';
 
+const starterExcerptIds = new Set(sampleData.excerpts.map((excerpt) => excerpt.id));
+const starterListIds = new Set(sampleData.lists.map((list) => list.id));
+
 export function isAppData(value: unknown): value is AppData {
   if (!value || typeof value !== 'object') return false;
   const data = value as AppData;
   return Array.isArray(data.excerpts) && Array.isArray(data.lists);
 }
 
+export function freshEmptyData(): AppData {
+  return { excerpts: [], lists: [] };
+}
+
 export function freshSampleData(): AppData {
-  return JSON.parse(JSON.stringify(sampleData));
+  return freshEmptyData();
+}
+
+export function isStarterData(data: AppData) {
+  if (data.excerpts.length !== sampleData.excerpts.length || data.lists.length !== sampleData.lists.length) {
+    return false;
+  }
+
+  return data.excerpts.every((excerpt) => starterExcerptIds.has(excerpt.id))
+    && data.lists.every((list) => starterListIds.has(list.id));
 }
 
 export function exportData(data: AppData) {

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import type { AppData, ConfidenceRating, Excerpt, SessionRecording } from './types';
-import { freshSampleData } from './lib/appData';
+import { freshEmptyData } from './lib/appData';
 import { repository } from './lib/repository';
 import { supabase } from './lib/supabaseClient';
 import { todayIso } from './lib/dates';
@@ -9,14 +9,16 @@ import { makeId } from './components/Atoms';
 import { AuthGate } from './components/AuthGate';
 import { Dashboard } from './components/Dashboard';
 import { DetailView } from './components/DetailView';
+import { ListsView } from './components/ListsView';
 import { PracticeModal } from './components/PracticeModal';
 
 function SignedInApp({ user }: { user: User }) {
-  const [data, setData] = useState<AppData>(() => freshSampleData());
+  const [data, setData] = useState<AppData>(() => freshEmptyData());
   const [syncState, setSyncState] = useState<'loading' | 'synced' | 'saving' | 'error'>('loading');
   const [syncMessage, setSyncMessage] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [practiceId, setPracticeId] = useState<string | null>(null);
+  const [view, setView] = useState<'dashboard' | 'lists'>('dashboard');
   const [selectedListId, setSelectedListId] = useState('all');
   const [pendingRecordings, setPendingRecordings] = useState<Record<string, SessionRecording | null>>({});
 
@@ -73,6 +75,58 @@ function SignedInApp({ user }: { user: User }) {
   const applyListFilter = (id: string) => {
     setSelectedListId(id);
     setSelectedId(null);
+    setView('dashboard');
+  };
+
+  const createExcerpt = () => {
+    const id = makeId('excerpt');
+    const newExcerpt: Excerpt = {
+      id,
+      title: 'Untitled excerpt',
+      confidenceRating: 1,
+      isNew: true,
+      isFocus: false,
+      practiceCount: 0,
+      lastPracticedDate: null,
+      dateAdded: todayIso(),
+      notes: '',
+      tags: [],
+      resources: [],
+      pdfAttachment: null,
+      practiceHistory: [],
+    };
+
+    const nextLists = selectedList
+      ? data.lists.map((list) => (list.id === selectedList.id ? { ...list, excerptIds: [...list.excerptIds, id] } : list))
+      : data.lists;
+
+    persistData({
+      ...data,
+      excerpts: [newExcerpt, ...data.excerpts],
+      lists: nextLists,
+    });
+    setSelectedId(id);
+    setView('dashboard');
+  };
+
+  const updateLists = (lists: typeof data.lists) => {
+    persistData({ ...data, lists });
+  };
+
+  const deleteSelectedExcerpt = () => {
+    if (!selectedExcerpt) return;
+    const confirmed = window.confirm(`Delete "${selectedExcerpt.title}"?`);
+    if (!confirmed) return;
+
+    persistData({
+      ...data,
+      excerpts: data.excerpts.filter((excerpt) => excerpt.id !== selectedExcerpt.id),
+      lists: data.lists.map((list) => ({
+        ...list,
+        excerptIds: list.excerptIds.filter((id) => id !== selectedExcerpt.id),
+      })),
+    });
+    setSelectedId(null);
   };
 
   const savePractice = (rating: ConfidenceRating, note: string) => {
@@ -110,6 +164,13 @@ function SignedInApp({ user }: { user: User }) {
             ))}
           </select>
         </div>
+        <button type="button" onClick={createExcerpt}>New excerpt</button>
+        <button type="button" onClick={() => {
+          setSelectedId(null);
+          setView('lists');
+        }}>
+          Lists
+        </button>
         <p className="sidebar-quote">“The score is a map.<br />The practice is the territory.”</p>
         <div className="sync-panel">
           <span>{syncState === 'loading' ? 'Loading cloud data' : syncState === 'saving' ? 'Saving' : syncState === 'error' ? 'Sync issue' : 'Synced'}</span>
@@ -126,16 +187,26 @@ function SignedInApp({ user }: { user: User }) {
             onBack={() => setSelectedId(null)}
             onChange={(patch) => updateExcerpt(selectedExcerpt.id, patch)}
             onPractice={() => setPracticeId(selectedExcerpt.id)}
+            onDelete={deleteSelectedExcerpt}
             pendingRecording={pendingRecordings[selectedExcerpt.id] ?? null}
             onPendingRecordingChange={(recording) => {
               setPendingRecordings((current) => ({ ...current, [selectedExcerpt.id]: recording }));
             }}
+          />
+        ) : view === 'lists' ? (
+          <ListsView
+            excerpts={data.excerpts}
+            lists={data.lists}
+            onBack={() => setView('dashboard')}
+            onChangeLists={updateLists}
           />
         ) : (
           <Dashboard
             excerpts={visibleExcerpts}
             onOpenExcerpt={setSelectedId}
             onPracticeExcerpt={setPracticeId}
+            onCreateExcerpt={createExcerpt}
+            onOpenLists={() => setView('lists')}
             listFilterName={selectedList ? selectedList.name : 'All excerpts'}
             listOptions={data.lists}
             selectedListId={selectedListId}

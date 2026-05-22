@@ -51,6 +51,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .mobile-header h1, .view-heading h1, .data-tools h1 { margin: 0; font-size: 40px; line-height: 1.05; font-weight: 400; }
 .mobile-header span { display: block; margin-top: 10px; font-family: var(--font-display); font-style: italic; color: var(--muted); }
 .mobile-list-filter { display: none; }
+.dashboard-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 18px; }
 
 .practice-group { margin-top: 28px; }
 .practice-group-header { min-height: 50px; border-bottom: 0.5px solid var(--divider); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -195,6 +196,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   .dashboard { padding: 20px 18px 90px; }
   .mobile-list-filter { display: block; margin: -6px 0 14px; }
   .mobile-list-filter span { display: block; margin: 0 0 8px; color: var(--muted); font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; font-weight: 600; }
+  .dashboard-actions { margin-bottom: 18px; }
+  .dashboard-actions .pill-button, .dashboard-actions .small-button { flex: 1 1 140px; }
   .library-view, .lists-view, .data-tools, .detail-view { padding: 20px 18px 90px; }
   .mobile-header h1, .view-heading h1, .data-tools h1 { font-size: 36px; }
   .practice-group { margin-top: 22px; }

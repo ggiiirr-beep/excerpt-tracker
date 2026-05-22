@@ -1,5 +1,5 @@
 import type { AppData } from '../types';
-import { freshSampleData } from './appData';
+import { freshEmptyData, isStarterData } from './appData';
 import { loadCachedData, saveCachedData } from './cache';
 import { supabase } from './supabaseClient';
 
@@ -30,11 +30,16 @@ export class SupabaseDataRepository implements DataRepository {
     }
 
     if (data?.data) {
+      if (isStarterData(data.data)) {
+        const emptyData = freshEmptyData();
+        await this.save(userId, emptyData);
+        return emptyData;
+      }
       saveCachedData(userId, data.data);
       return data.data;
     }
 
-    const seeded = cached ?? freshSampleData();
+    const seeded = cached && !isStarterData(cached) ? cached : freshEmptyData();
     await this.save(userId, seeded);
     return seeded;
   }
