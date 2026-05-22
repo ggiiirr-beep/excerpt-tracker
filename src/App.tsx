@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import type { AppData, ConfidenceRating, Excerpt, SessionRecording } from './types';
+import logoUrl from './assets/logo.png';
 import { freshEmptyData } from './lib/appData';
 import { repository } from './lib/repository';
 import { supabase } from './lib/supabaseClient';
@@ -9,6 +10,7 @@ import { makeId } from './components/Atoms';
 import { AuthGate } from './components/AuthGate';
 import { Dashboard } from './components/Dashboard';
 import { DetailView } from './components/DetailView';
+import { ExcerptFormModal } from './components/ExcerptFormModal';
 import { ListsView } from './components/ListsView';
 import { PracticeModal } from './components/PracticeModal';
 
@@ -19,6 +21,7 @@ function SignedInApp({ user }: { user: User }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [practiceId, setPracticeId] = useState<string | null>(null);
   const [view, setView] = useState<'dashboard' | 'lists'>('dashboard');
+  const [formMode, setFormMode] = useState<'create' | 'edit' | null>(null);
   const [selectedListId, setSelectedListId] = useState('all');
   const [pendingRecordings, setPendingRecordings] = useState<Record<string, SessionRecording | null>>({});
 
@@ -78,20 +81,29 @@ function SignedInApp({ user }: { user: User }) {
     setView('dashboard');
   };
 
-  const createExcerpt = () => {
+  const goHome = () => {
+    setSelectedId(null);
+    setView('dashboard');
+  };
+
+  const openCreateExcerpt = () => {
+    setFormMode('create');
+  };
+
+  const saveNewExcerpt = (value: Pick<Excerpt, 'title' | 'confidenceRating' | 'isFocus' | 'notes' | 'tags' | 'resources'>) => {
     const id = makeId('excerpt');
     const newExcerpt: Excerpt = {
       id,
-      title: 'Untitled excerpt',
-      confidenceRating: 1,
+      title: value.title,
+      confidenceRating: value.confidenceRating,
       isNew: true,
-      isFocus: false,
+      isFocus: value.isFocus,
       practiceCount: 0,
       lastPracticedDate: null,
       dateAdded: todayIso(),
-      notes: '',
-      tags: [],
-      resources: [],
+      notes: value.notes,
+      tags: value.tags,
+      resources: value.resources,
       pdfAttachment: null,
       practiceHistory: [],
     };
@@ -107,6 +119,7 @@ function SignedInApp({ user }: { user: User }) {
     });
     setSelectedId(id);
     setView('dashboard');
+    setFormMode(null);
   };
 
   const updateLists = (lists: typeof data.lists) => {
@@ -127,6 +140,12 @@ function SignedInApp({ user }: { user: User }) {
       })),
     });
     setSelectedId(null);
+  };
+
+  const saveEditedExcerpt = (value: Pick<Excerpt, 'title' | 'confidenceRating' | 'isFocus' | 'notes' | 'tags' | 'resources'>) => {
+    if (!selectedExcerpt) return;
+    updateExcerpt(selectedExcerpt.id, value);
+    setFormMode(null);
   };
 
   const savePractice = (rating: ConfidenceRating, note: string) => {
@@ -150,10 +169,13 @@ function SignedInApp({ user }: { user: User }) {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand">
-          <strong>Excerpts</strong>
-          <span>a tracker</span>
-        </div>
+        <button className="brand-button" type="button" onClick={goHome} aria-label="Go to main list">
+          <img src={logoUrl} alt="" />
+          <span>
+            <strong>Excerpts</strong>
+            <em>a tracker</em>
+          </span>
+        </button>
         <p className="sidebar-count">{selectedList ? selectedList.name : 'All excerpts'} · {visibleExcerpts.filter((excerpt) => excerpt.isFocus).length} in focus · {visibleExcerpts.length} total</p>
         <div className="desktop-list-filter">
           <p>List</p>
@@ -164,13 +186,32 @@ function SignedInApp({ user }: { user: User }) {
             ))}
           </select>
         </div>
-        <button type="button" onClick={createExcerpt}>New excerpt</button>
+        <button type="button" onClick={openCreateExcerpt}>New excerpt</button>
         <button type="button" onClick={() => {
           setSelectedId(null);
           setView('lists');
         }}>
           Lists
         </button>
+        {selectedExcerpt && (
+          <div className="sidebar-excerpt-list">
+            <p>Excerpts</p>
+            {visibleExcerpts.length ? (
+              visibleExcerpts.map((excerpt) => (
+                <button
+                  className={excerpt.id === selectedExcerpt.id ? 'active' : ''}
+                  type="button"
+                  key={excerpt.id}
+                  onClick={() => setSelectedId(excerpt.id)}
+                >
+                  <span>{excerpt.title}</span>
+                </button>
+              ))
+            ) : (
+              <small>No excerpts in this list.</small>
+            )}
+          </div>
+        )}
         <p className="sidebar-quote">“The score is a map.<br />The practice is the territory.”</p>
         <div className="sync-panel">
           <span>{syncState === 'loading' ? 'Loading cloud data' : syncState === 'saving' ? 'Saving' : syncState === 'error' ? 'Sync issue' : 'Synced'}</span>
@@ -187,6 +228,7 @@ function SignedInApp({ user }: { user: User }) {
             onBack={() => setSelectedId(null)}
             onChange={(patch) => updateExcerpt(selectedExcerpt.id, patch)}
             onPractice={() => setPracticeId(selectedExcerpt.id)}
+            onEdit={() => setFormMode('edit')}
             onDelete={deleteSelectedExcerpt}
             pendingRecording={pendingRecordings[selectedExcerpt.id] ?? null}
             onPendingRecordingChange={(recording) => {
@@ -205,7 +247,7 @@ function SignedInApp({ user }: { user: User }) {
             excerpts={visibleExcerpts}
             onOpenExcerpt={setSelectedId}
             onPracticeExcerpt={setPracticeId}
-            onCreateExcerpt={createExcerpt}
+            onCreateExcerpt={openCreateExcerpt}
             onOpenLists={() => setView('lists')}
             listFilterName={selectedList ? selectedList.name : 'All excerpts'}
             listOptions={data.lists}
@@ -216,6 +258,21 @@ function SignedInApp({ user }: { user: User }) {
       </main>
 
       {practiceExcerpt && <PracticeModal excerpt={practiceExcerpt} onClose={() => setPracticeId(null)} onSave={savePractice} />}
+      {formMode === 'create' && (
+        <ExcerptFormModal
+          mode="create"
+          onCancel={() => setFormMode(null)}
+          onSave={saveNewExcerpt}
+        />
+      )}
+      {formMode === 'edit' && selectedExcerpt && (
+        <ExcerptFormModal
+          mode="edit"
+          initialValue={selectedExcerpt}
+          onCancel={() => setFormMode(null)}
+          onSave={saveEditedExcerpt}
+        />
+      )}
     </div>
   );
 }

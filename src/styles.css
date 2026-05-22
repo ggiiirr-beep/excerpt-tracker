@@ -21,9 +21,14 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 
 .app-shell { min-height: 100dvh; display: flex; background: var(--paper); }
 .sidebar { width: 268px; flex: 0 0 268px; min-height: 100dvh; position: sticky; top: 0; padding: 28px 16px 22px; background: var(--paper-2); border-right: 0.5px solid var(--divider-strong); display: flex; flex-direction: column; gap: 14px; }
+.sidebar .brand-button { border: 0; background: transparent; color: var(--ink); min-height: 54px; padding: 6px; display: flex; align-items: center; gap: 10px; text-align: left; cursor: pointer; border-radius: 8px; }
+.sidebar .brand-button:hover { background: rgba(31, 26, 20, 0.06); }
+.brand-button img { width: 42px; height: 42px; border-radius: 10px; object-fit: cover; box-shadow: 0 4px 14px rgba(31, 26, 20, 0.12); }
+.brand-button span { display: grid; gap: 1px; }
+.brand-button em { font-style: italic; color: var(--muted); font-family: var(--font-display); font-size: 13px; }
 .brand { display: flex; align-items: baseline; gap: 8px; padding: 0 6px; }
 .brand strong, h1, h2, h3 { font-family: var(--font-display); font-weight: 500; letter-spacing: 0; }
-.brand strong { font-size: 22px; }
+.brand strong, .brand-button strong { font-size: 22px; }
 .brand span, .sidebar-count { font-family: var(--font-display); font-style: italic; color: var(--muted); }
 .sidebar-count { margin: 0 6px 8px; font-size: 14px; }
 .desktop-list-filter { display: grid; gap: 4px; }
@@ -31,6 +36,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .sidebar button.active, .sidebar button:hover { background: rgba(31, 26, 20, 0.06); }
 .desktop-list-filter p, .eyebrow, .field-label { margin: 10px 6px 6px; font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 .desktop-list-filter select, .mobile-list-filter select { width: 100%; min-height: 44px; border: 0.5px solid var(--divider-strong); border-radius: 8px; background: rgba(251, 248, 240, 0.55); color: var(--ink); padding: 10px 12px; cursor: pointer; }
+.sidebar-excerpt-list { display: grid; gap: 3px; min-height: 0; overflow: auto; border-top: 0.5px solid var(--divider-strong); padding-top: 10px; }
+.sidebar-excerpt-list p { margin: 0 6px 4px; font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.sidebar-excerpt-list button { min-height: 38px; padding: 8px 10px; font-size: 13px; }
+.sidebar-excerpt-list button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-excerpt-list small { color: var(--muted); padding: 0 6px; }
 .sidebar-quote { margin: auto 6px 0; color: var(--faint); font-family: var(--font-display); font-style: italic; font-size: 13px; line-height: 1.5; }
 .sync-panel { margin: 10px 6px 0; display: grid; gap: 8px; color: var(--muted); font-size: 12px; }
 .sync-panel small { color: var(--accent); line-height: 1.35; }
@@ -96,6 +106,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .star-picker { display: flex; justify-content: center; gap: 10px; }
 .star-picker button { border: 0; background: transparent; color: var(--ink); min-width: 44px; min-height: 44px; display: grid; place-items: center; cursor: pointer; }
 .practice-wide { margin: 24px 0; }
+.detail-edit-button { width: 100%; margin-top: -12px; }
 .cue-tools { margin: 22px auto 0; width: min(100%, 420px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; color: var(--muted); }
 .cue-tool { min-width: 0; display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; padding: 0; }
 .cue-tool a, .cue-tool button { width: 100%; min-height: 36px; border: 0.5px solid rgba(31, 26, 20, 0.09); border-radius: 999px; background: rgba(31, 26, 20, 0.025); color: var(--muted); text-decoration: none; padding: 7px 10px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; font-size: 13px; }
@@ -168,7 +179,14 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .email-auth-form { display: grid; gap: 14px; }
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: rgba(31, 26, 20, 0.34); padding: 24px; }
-.practice-modal { width: min(480px, 100%); background: var(--paper); border-radius: 24px; box-shadow: 0 30px 80px rgba(31, 26, 20, 0.28); padding: 28px; }
+.practice-modal, .excerpt-form-modal { width: min(480px, 100%); background: var(--paper); border-radius: 24px; box-shadow: 0 30px 80px rgba(31, 26, 20, 0.28); padding: 28px; }
+.excerpt-form-modal { width: min(640px, 100%); max-height: min(88dvh, 820px); overflow: auto; }
+.excerpt-form-modal header h2 { margin: 0; font-family: var(--font-display); font-size: 32px; font-weight: 400; }
+.excerpt-form-modal .form-block { margin-top: 18px; }
+.excerpt-form-modal .star-picker { justify-content: flex-start; }
+.excerpt-form-modal .form-check-row { margin-top: 16px; }
+.excerpt-form-modal .resource-row { grid-template-columns: minmax(120px, 0.45fr) 1fr auto; }
+.modal-actions { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 24px; }
 .grabber { display: none; width: 40px; height: 4px; background: var(--faint); border-radius: 2px; margin: 0 auto 18px; }
 .practice-modal h2 { margin: 0 0 20px; font-size: 26px; }
 .note-label { display: block; margin: 24px 0; color: var(--muted); font-size: 12px; letter-spacing: 1.2px; text-transform: uppercase; }
@@ -213,7 +231,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   .library-row small { display: block; margin-top: 8px; }
   .modal-backdrop { align-items: end; padding: 0; }
   .practice-modal { border-radius: 24px 24px 0 0; padding: 12px 24px 28px; }
+  .excerpt-form-modal { width: 100%; max-height: 92dvh; border-radius: 24px 24px 0 0; padding: 12px 24px 28px; }
   .grabber { display: block; }
   .recording-preview { grid-template-columns: 1fr; }
   .cue-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .excerpt-form-modal .resource-row, .modal-actions { grid-template-columns: 1fr; display: grid; }
+  .modal-actions .pill-button, .modal-actions .text-button { width: 100%; text-align: center; }
 }

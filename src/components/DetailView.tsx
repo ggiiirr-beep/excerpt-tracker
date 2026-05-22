@@ -1,7 +1,7 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import type { Excerpt, RepertoireList, ResourceLink, SessionRecording } from '../types';
 import { formatDate, formatShortDate, relativePracticeDate } from '../lib/dates';
-import { confidenceLabel, FieldLabel, makeId, StarPicker, Stars } from './Atoms';
+import { confidenceLabel, FieldLabel, StarPicker, Stars } from './Atoms';
 
 export function DetailView({
   excerpt,
@@ -9,6 +9,7 @@ export function DetailView({
   onBack,
   onChange,
   onPractice,
+  onEdit,
   onDelete,
   pendingRecording,
   onPendingRecordingChange,
@@ -18,14 +19,13 @@ export function DetailView({
   onBack: () => void;
   onChange: (patch: Partial<Excerpt>) => void;
   onPractice: () => void;
+  onEdit: () => void;
   onDelete: () => void;
   pendingRecording: SessionRecording | null;
   onPendingRecordingChange: (recording: SessionRecording | null) => void;
 }) {
   const [showDetails, setShowDetails] = useState(false);
-  const [titleDraft, setTitleDraft] = useState(excerpt.title);
   const [notesDraft, setNotesDraft] = useState(excerpt.notes);
-  const [tagsDraft, setTagsDraft] = useState(excerpt.tags.join(', '));
   const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'blocked'>('idle');
   const [recordingError, setRecordingError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,18 +38,8 @@ export function DetailView({
 
   useEffect(() => {
     setShowDetails(false);
-    setTitleDraft(excerpt.title);
     setNotesDraft(excerpt.notes);
-    setTagsDraft(excerpt.tags.join(', '));
   }, [excerpt.id, excerpt.notes]);
-
-  useEffect(() => {
-    setTitleDraft(excerpt.title);
-  }, [excerpt.id, excerpt.title]);
-
-  useEffect(() => {
-    setTagsDraft(excerpt.tags.join(', '));
-  }, [excerpt.id, excerpt.tags]);
 
   const attachPdf = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -121,27 +111,6 @@ export function DetailView({
     }
   };
 
-  const updateResource = (id: string, patch: Partial<ResourceLink>) => {
-    onChange({
-      resources: excerpt.resources.map((resource) => (resource.id === id ? { ...resource, ...patch } : resource)),
-    });
-  };
-
-  const addResource = () => {
-    onChange({
-      resources: [...excerpt.resources, { id: makeId('resource'), label: 'Link', url: '' }],
-    });
-  };
-
-  const saveTags = () => {
-    onChange({
-      tags: tagsDraft
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter(Boolean),
-    });
-  };
-
   return (
     <section className="detail-view">
       <button className="back-link" type="button" onClick={onBack}>‹ Excerpts</button>
@@ -197,6 +166,7 @@ export function DetailView({
       </div>
 
       <button className="primary-button practice-wide" type="button" onClick={onPractice}>Practice finished</button>
+      <button className="small-button detail-edit-button" type="button" onClick={onEdit}>Edit information</button>
 
       <div className="details-toggle-wrap">
         <button className="details-toggle" type="button" onClick={() => setShowDetails((current) => !current)}>
@@ -211,16 +181,6 @@ export function DetailView({
             <span>In focus</span>
             <em>{excerpt.isFocus ? 'on your shortlist' : ''}</em>
           </label>
-
-          <div className="form-block">
-            <FieldLabel>Title</FieldLabel>
-            <input
-              value={titleDraft}
-              onChange={(event) => setTitleDraft(event.target.value)}
-              onBlur={() => onChange({ title: titleDraft.trim() || 'Untitled excerpt' })}
-              placeholder="Excerpt title"
-            />
-          </div>
 
           <div className="detail-grid">
             <div className="stat"><span>Practice count</span><strong>{excerpt.practiceCount}</strong></div>
@@ -241,43 +201,25 @@ export function DetailView({
 
           <div className="form-block">
             <FieldLabel>Tags</FieldLabel>
-            <input
-              value={tagsDraft}
-              onChange={(event) => setTagsDraft(event.target.value)}
-              onBlur={saveTags}
-              placeholder="audition, tutti, current"
-            />
+            <div className="tag-list">
+              {excerpt.tags.length ? excerpt.tags.map((tag) => <span key={tag}>{tag}</span>) : <p className="plain-empty">no tags</p>}
+            </div>
           </div>
 
           <div className="form-block">
-            <div className="block-heading">
-              <FieldLabel>References</FieldLabel>
-              <button className="text-button" type="button" onClick={addResource}>+ add link</button>
+            <FieldLabel>References</FieldLabel>
+            <div className="reference-list">
+              {excerpt.resources.length ? (
+                excerpt.resources.map((resource: ResourceLink) => (
+                  <a href={resource.url} target="_blank" rel="noreferrer" key={resource.id}>
+                    <span>↗</span>
+                    {resource.label || resource.url}
+                  </a>
+                ))
+              ) : (
+                <p className="plain-empty">nothing linked yet</p>
+              )}
             </div>
-            {excerpt.resources.length ? (
-              <div className="resources-list">
-                {excerpt.resources.map((resource: ResourceLink) => (
-                  <div className="resource-row" key={resource.id}>
-                    <input
-                      value={resource.label}
-                      onChange={(event) => updateResource(resource.id, { label: event.target.value })}
-                      placeholder="Label"
-                    />
-                    <input
-                      value={resource.url}
-                      onChange={(event) => updateResource(resource.id, { url: event.target.value })}
-                      placeholder="https://..."
-                    />
-                    {resource.url && <a href={resource.url} target="_blank" rel="noreferrer">Open</a>}
-                    <button type="button" onClick={() => onChange({ resources: excerpt.resources.filter((item) => item.id !== resource.id) })}>
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="plain-empty">nothing linked yet</p>
-            )}
           </div>
 
           <div className="form-block">
