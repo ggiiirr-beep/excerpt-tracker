@@ -80,9 +80,15 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .empty-row, .quiet-empty { margin: 0; padding: 18px; background: var(--card); border: 0.5px solid var(--divider); border-radius: 8px; color: var(--muted); font-family: var(--font-display); font-style: italic; }
 
 .excerpt-card, .list-card, .cue-card, .data-tools { background: var(--card); border: 0.5px solid var(--divider); border-radius: 8px; }
-.excerpt-card { padding: 18px 20px; display: flex; gap: 16px; align-items: flex-start; cursor: pointer; }
+.excerpt-card { position: relative; padding: 18px 20px; display: flex; gap: 12px; align-items: flex-start; }
 .excerpt-card:hover { border-color: var(--divider-strong); }
 .card-main { flex: 1; min-width: 0; }
+.card-actions { position: relative; flex: 0 0 auto; }
+.card-menu-button { width: 40px; min-height: 40px; border: 0; border-radius: 999px; background: rgba(31, 26, 20, 0.06); color: var(--ink); cursor: pointer; letter-spacing: 1px; }
+.card-menu { position: absolute; right: 0; top: 44px; z-index: 5; width: 178px; padding: 6px; background: var(--card); border: 0.5px solid var(--divider-strong); border-radius: 8px; box-shadow: 0 14px 34px rgba(31, 26, 20, 0.16); display: grid; gap: 2px; }
+.card-menu button { border: 0; background: transparent; min-height: 38px; text-align: left; border-radius: 6px; padding: 8px 10px; color: var(--ink); cursor: pointer; }
+.card-menu button:hover { background: rgba(31, 26, 20, 0.06); }
+.card-menu .danger-menu-item { color: var(--accent); }
 .title-row { display: flex; align-items: baseline; gap: 8px; }
 .title-row h3 { margin: 0; font-size: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .focus-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: 0 0 6px; }
@@ -246,7 +252,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   .all-excerpts-heading { display: block; margin-top: 30px; }
   .all-excerpts-heading span { display: block; margin-top: 8px; }
   .excerpt-card { border-radius: 0; border-left: 0; border-right: 0; border-bottom: 0; padding: 16px 0; flex-wrap: wrap; }
-  .excerpt-card .pill-button { width: 100%; }
+  .excerpt-card .pill-button { width: calc(100% - 52px); }
+  .card-actions { margin-left: auto; }
   .title-row h3 { font-size: 18px; }
   .resource-row { grid-template-columns: 1fr; }
   .view-heading { align-items: flex-start; }

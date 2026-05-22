@@ -11,6 +11,7 @@ import { AuthGate } from './components/AuthGate';
 import { Dashboard } from './components/Dashboard';
 import { DetailView } from './components/DetailView';
 import { ExcerptFormModal } from './components/ExcerptFormModal';
+import { ListMembershipModal } from './components/ListMembershipModal';
 import { ListsView } from './components/ListsView';
 import { PracticeModal } from './components/PracticeModal';
 
@@ -22,6 +23,8 @@ function SignedInApp({ user }: { user: User }) {
   const [practiceId, setPracticeId] = useState<string | null>(null);
   const [view, setView] = useState<'dashboard' | 'lists'>('dashboard');
   const [formMode, setFormMode] = useState<'create' | 'edit' | null>(null);
+  const [editExcerptId, setEditExcerptId] = useState<string | null>(null);
+  const [listMembershipExcerptId, setListMembershipExcerptId] = useState<string | null>(null);
   const [selectedListId, setSelectedListId] = useState('all');
   const [pendingRecordings, setPendingRecordings] = useState<Record<string, SessionRecording | null>>({});
 
@@ -60,6 +63,8 @@ function SignedInApp({ user }: { user: User }) {
 
   const selectedExcerpt = selectedId ? data.excerpts.find((excerpt) => excerpt.id === selectedId) ?? null : null;
   const practiceExcerpt = practiceId ? data.excerpts.find((excerpt) => excerpt.id === practiceId) ?? null : null;
+  const editExcerpt = editExcerptId ? data.excerpts.find((excerpt) => excerpt.id === editExcerptId) ?? null : null;
+  const listMembershipExcerpt = listMembershipExcerptId ? data.excerpts.find((excerpt) => excerpt.id === listMembershipExcerptId) ?? null : null;
   const selectedList = selectedListId === 'all' ? null : data.lists.find((list) => list.id === selectedListId) ?? null;
   const visibleExcerpts = useMemo(() => {
     if (!selectedList) return data.excerpts;
@@ -90,7 +95,7 @@ function SignedInApp({ user }: { user: User }) {
     setFormMode('create');
   };
 
-  const saveNewExcerpt = (value: Pick<Excerpt, 'title' | 'confidenceRating' | 'isFocus' | 'notes' | 'tags' | 'resources'>) => {
+  const saveNewExcerpt = (value: Pick<Excerpt, 'title' | 'confidenceRating' | 'isFocus' | 'notes' | 'resources'>) => {
     const id = makeId('excerpt');
     const newExcerpt: Excerpt = {
       id,
@@ -102,7 +107,7 @@ function SignedInApp({ user }: { user: User }) {
       lastPracticedDate: null,
       dateAdded: todayIso(),
       notes: value.notes,
-      tags: value.tags,
+      tags: [],
       resources: value.resources,
       pdfAttachment: null,
       practiceHistory: [],
@@ -140,26 +145,65 @@ function SignedInApp({ user }: { user: User }) {
     setView('lists');
   };
 
-  const deleteSelectedExcerpt = () => {
-    if (!selectedExcerpt) return;
-    const confirmed = window.confirm(`Delete "${selectedExcerpt.title}"?`);
+  const deleteExcerpt = (id: string) => {
+    const excerpt = data.excerpts.find((item) => item.id === id);
+    if (!excerpt) return;
+    const confirmed = window.confirm(`Delete "${excerpt.title}"? This will also delete its practice history, PDF, and recordings.`);
     if (!confirmed) return;
 
     persistData({
       ...data,
-      excerpts: data.excerpts.filter((excerpt) => excerpt.id !== selectedExcerpt.id),
+      excerpts: data.excerpts.filter((item) => item.id !== id),
       lists: data.lists.map((list) => ({
         ...list,
-        excerptIds: list.excerptIds.filter((id) => id !== selectedExcerpt.id),
+        excerptIds: list.excerptIds.filter((excerptId) => excerptId !== id),
       })),
     });
-    setSelectedId(null);
+    if (selectedId === id) setSelectedId(null);
+    if (editExcerptId === id) {
+      setEditExcerptId(null);
+      setFormMode(null);
+    }
+    if (listMembershipExcerptId === id) setListMembershipExcerptId(null);
   };
 
-  const saveEditedExcerpt = (value: Pick<Excerpt, 'title' | 'confidenceRating' | 'isFocus' | 'notes' | 'tags' | 'resources'>) => {
-    if (!selectedExcerpt) return;
-    updateExcerpt(selectedExcerpt.id, value);
+  const saveEditedExcerpt = (value: Pick<Excerpt, 'title' | 'confidenceRating' | 'isFocus' | 'notes' | 'resources'>) => {
+    if (!editExcerpt) return;
+    updateExcerpt(editExcerpt.id, value);
     setFormMode(null);
+    setEditExcerptId(null);
+  };
+
+  const openEditExcerpt = (id: string) => {
+    setEditExcerptId(id);
+    setFormMode('edit');
+  };
+
+  const toggleExcerptFocus = (id: string) => {
+    const excerpt = data.excerpts.find((item) => item.id === id);
+    if (!excerpt) return;
+    updateExcerpt(id, { isFocus: !excerpt.isFocus });
+  };
+
+  const saveListMembership = (excerptId: string, listIds: string[], newListName: string) => {
+    const newListId = newListName ? makeId('list') : null;
+    const nextSelectedIds = new Set(listIds);
+    if (newListId) nextSelectedIds.add(newListId);
+
+    const updatedLists = data.lists.map((list) => ({
+      ...list,
+      excerptIds: nextSelectedIds.has(list.id)
+        ? [...new Set([...list.excerptIds, excerptId])]
+        : list.excerptIds.filter((id) => id !== excerptId),
+    }));
+
+    persistData({
+      ...data,
+      lists: newListId
+        ? [...updatedLists, { id: newListId, name: newListName, excerptIds: [excerptId] }]
+        : updatedLists,
+    });
+    setListMembershipExcerptId(null);
   };
 
   const savePractice = (rating: ConfidenceRating, note: string) => {
@@ -251,8 +295,9 @@ function SignedInApp({ user }: { user: User }) {
             onBack={() => setSelectedId(null)}
             onChange={(patch) => updateExcerpt(selectedExcerpt.id, patch)}
             onPractice={() => setPracticeId(selectedExcerpt.id)}
-            onEdit={() => setFormMode('edit')}
-            onDelete={deleteSelectedExcerpt}
+            onEdit={() => openEditExcerpt(selectedExcerpt.id)}
+            onManageLists={() => setListMembershipExcerptId(selectedExcerpt.id)}
+            onDelete={() => deleteExcerpt(selectedExcerpt.id)}
             pendingRecording={pendingRecordings[selectedExcerpt.id] ?? null}
             onPendingRecordingChange={(recording) => {
               setPendingRecordings((current) => ({ ...current, [selectedExcerpt.id]: recording }));
@@ -270,8 +315,11 @@ function SignedInApp({ user }: { user: User }) {
         ) : (
           <Dashboard
             excerpts={visibleExcerpts}
-            onOpenExcerpt={setSelectedId}
             onPracticeExcerpt={setSelectedId}
+            onEditExcerpt={openEditExcerpt}
+            onAddExcerptToList={setListMembershipExcerptId}
+            onToggleExcerptFocus={toggleExcerptFocus}
+            onDeleteExcerpt={deleteExcerpt}
             onCreateExcerpt={openCreateExcerpt}
             onOpenLists={() => setView('lists')}
             listFilterName={selectedList ? selectedList.name : 'All excerpts'}
@@ -290,12 +338,23 @@ function SignedInApp({ user }: { user: User }) {
           onSave={saveNewExcerpt}
         />
       )}
-      {formMode === 'edit' && selectedExcerpt && (
+      {formMode === 'edit' && editExcerpt && (
         <ExcerptFormModal
           mode="edit"
-          initialValue={selectedExcerpt}
-          onCancel={() => setFormMode(null)}
+          initialValue={editExcerpt}
+          onCancel={() => {
+            setFormMode(null);
+            setEditExcerptId(null);
+          }}
           onSave={saveEditedExcerpt}
+        />
+      )}
+      {listMembershipExcerpt && (
+        <ListMembershipModal
+          excerpt={listMembershipExcerpt}
+          lists={data.lists}
+          onCancel={() => setListMembershipExcerptId(null)}
+          onSave={(listIds, newListName) => saveListMembership(listMembershipExcerpt.id, listIds, newListName)}
         />
       )}
     </div>

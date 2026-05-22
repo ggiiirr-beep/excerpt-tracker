@@ -83,7 +83,11 @@ export function ListsView({
             isSelected={list.id === selectedListId}
             onRename={renameList}
             onUpdate={updateList}
-            onDelete={() => onChangeLists(lists.filter((item) => item.id !== list.id))}
+            onDelete={() => {
+              const confirmed = window.confirm(`Delete "${list.name}"? The excerpts will stay in your library.`);
+              if (!confirmed) return;
+              onChangeLists(lists.filter((item) => item.id !== list.id));
+            }}
           />
         ))
       ) : (

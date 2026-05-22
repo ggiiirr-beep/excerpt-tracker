@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Excerpt, ExcerptConfidenceRating, ResourceLink } from '../types';
 import { FieldLabel, makeId, StarPicker, Stars } from './Atoms';
 
-type ExcerptFormValue = Pick<Excerpt, 'title' | 'confidenceRating' | 'isFocus' | 'notes' | 'tags' | 'resources'>;
+type ExcerptFormValue = Pick<Excerpt, 'title' | 'confidenceRating' | 'isFocus' | 'notes' | 'resources'>;
 
 function emptyResource(): ResourceLink {
   return { id: makeId('resource'), label: '', url: '' };
@@ -23,14 +23,12 @@ export function ExcerptFormModal({
   const [confidenceRating, setConfidenceRating] = useState<ExcerptConfidenceRating>(initialValue?.confidenceRating ?? 0);
   const [isFocus, setIsFocus] = useState(initialValue?.isFocus ?? false);
   const [notes, setNotes] = useState(initialValue?.notes ?? '');
-  const [tags, setTags] = useState(initialValue?.tags.join(', ') ?? '');
   const [resources, setResources] = useState<ResourceLink[]>(initialValue?.resources.length ? initialValue.resources : []);
   const [error, setError] = useState('');
   const isDirty = title !== (initialValue?.title ?? '')
     || confidenceRating !== (initialValue?.confidenceRating ?? 0)
     || isFocus !== (initialValue?.isFocus ?? false)
     || notes !== (initialValue?.notes ?? '')
-    || tags !== (initialValue?.tags.join(', ') ?? '')
     || JSON.stringify(resources) !== JSON.stringify(initialValue?.resources.length ? initialValue.resources : []);
 
   const updateResource = (id: string, patch: Partial<ResourceLink>) => {
@@ -49,10 +47,6 @@ export function ExcerptFormModal({
       confidenceRating,
       isFocus,
       notes,
-      tags: tags
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter(Boolean),
       resources: resources
         .map((resource) => ({
           ...resource,
@@ -104,11 +98,6 @@ export function ExcerptFormModal({
         </div>
 
         <div className="form-block">
-          <FieldLabel>Tags</FieldLabel>
-          <input value={tags} onChange={(event) => setTags(event.target.value)} />
-        </div>
-
-        <div className="form-block">
           <div className="block-heading">
             <FieldLabel>References</FieldLabel>
             <button className="text-button" type="button" onClick={() => setResources((current) => [...current, emptyResource()])}>
@@ -121,7 +110,10 @@ export function ExcerptFormModal({
                 <div className="resource-row" key={resource.id}>
                   <input value={resource.label} onChange={(event) => updateResource(resource.id, { label: event.target.value })} aria-label="Resource label" />
                   <input value={resource.url} onChange={(event) => updateResource(resource.id, { url: event.target.value })} aria-label="Resource URL" />
-                  <button type="button" onClick={() => setResources((current) => current.filter((item) => item.id !== resource.id))}>
+                  <button type="button" onClick={() => {
+                    if (!window.confirm('Remove this reference link?')) return;
+                    setResources((current) => current.filter((item) => item.id !== resource.id));
+                  }}>
                     Remove
                   </button>
                 </div>

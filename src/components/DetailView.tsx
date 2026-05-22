@@ -10,6 +10,7 @@ export function DetailView({
   onChange,
   onPractice,
   onEdit,
+  onManageLists,
   onDelete,
   pendingRecording,
   onPendingRecordingChange,
@@ -20,6 +21,7 @@ export function DetailView({
   onChange: (patch: Partial<Excerpt>) => void;
   onPractice: () => void;
   onEdit: () => void;
+  onManageLists: () => void;
   onDelete: () => void;
   pendingRecording: SessionRecording | null;
   onPendingRecordingChange: (recording: SessionRecording | null) => void;
@@ -113,7 +115,7 @@ export function DetailView({
     <section className="detail-view">
       <button className="back-link" type="button" onClick={onBack}>‹ Excerpts</button>
       <div className="cue-card">
-        <p className="cue-kicker">{excerpt.tags[0] || 'Excerpt'}</p>
+        <p className="cue-kicker">Excerpt</p>
         <h1>{excerpt.title}</h1>
         <div className="cue-stars">
           <Stars rating={excerpt.confidenceRating} size={26} />
@@ -130,7 +132,12 @@ export function DetailView({
                   <em>{pdfSize}</em>
                 </a>
                 <button type="button" onClick={() => fileInputRef.current?.click()}>Replace</button>
-                <button type="button" onClick={() => onChange({ pdfAttachment: null })}>Remove</button>
+                <button type="button" onClick={() => {
+                  if (!window.confirm('Remove this PDF from the excerpt?')) return;
+                  onChange({ pdfAttachment: null });
+                }}>
+                  Remove
+                </button>
               </>
             ) : (
               <button type="button" onClick={() => fileInputRef.current?.click()}>
@@ -149,7 +156,12 @@ export function DetailView({
               <>
                 <audio controls src={pendingRecording.dataUrl} />
                 <button type="button" onClick={startRecording}>Replace</button>
-                <button type="button" onClick={() => onPendingRecordingChange(null)}>Remove</button>
+                <button type="button" onClick={() => {
+                  if (!window.confirm('Remove this pending recording?')) return;
+                  onPendingRecordingChange(null);
+                }}>
+                  Remove
+                </button>
               </>
             ) : (
               <button type="button" onClick={startRecording}>
@@ -190,9 +202,12 @@ export function DetailView({
         </div>
 
         <div className="form-block">
-          <FieldLabel>Tags</FieldLabel>
+          <div className="block-heading">
+            <FieldLabel>Lists</FieldLabel>
+            <button className="text-button" type="button" onClick={onManageLists}>Manage lists</button>
+          </div>
           <div className="tag-list">
-            {excerpt.tags.length ? excerpt.tags.map((tag) => <span key={tag}>{tag}</span>) : <p className="plain-empty">no tags</p>}
+            {listNames.length ? listNames.map((name) => <span key={name}>{name}</span>) : <p className="plain-empty">not in a list</p>}
           </div>
         </div>
 

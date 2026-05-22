@@ -35,8 +35,11 @@ export function buildPracticeGroups(excerpts: Excerpt[]): Section[] {
 
 export function Dashboard({
   excerpts,
-  onOpenExcerpt,
   onPracticeExcerpt,
+  onEditExcerpt,
+  onAddExcerptToList,
+  onToggleExcerptFocus,
+  onDeleteExcerpt,
   onCreateExcerpt,
   onOpenLists,
   listFilterName,
@@ -45,8 +48,11 @@ export function Dashboard({
   onSelectList,
 }: {
   excerpts: Excerpt[];
-  onOpenExcerpt: (id: string) => void;
   onPracticeExcerpt: (id: string) => void;
+  onEditExcerpt: (id: string) => void;
+  onAddExcerptToList: (id: string) => void;
+  onToggleExcerptFocus: (id: string) => void;
+  onDeleteExcerpt: (id: string) => void;
   onCreateExcerpt: () => void;
   onOpenLists: () => void;
   listFilterName: string;
@@ -93,8 +99,11 @@ export function Dashboard({
             label="Focus"
             accent
             items={focusItems}
-            onOpenExcerpt={onOpenExcerpt}
             onPracticeExcerpt={onPracticeExcerpt}
+            onEditExcerpt={onEditExcerpt}
+            onAddExcerptToList={onAddExcerptToList}
+            onToggleExcerptFocus={onToggleExcerptFocus}
+            onDeleteExcerpt={onDeleteExcerpt}
             emptyText="Nothing in focus yet."
           />
 
@@ -109,8 +118,11 @@ export function Dashboard({
               rating={group.rating}
               label={group.label}
               items={group.items}
-              onOpenExcerpt={onOpenExcerpt}
               onPracticeExcerpt={onPracticeExcerpt}
+              onEditExcerpt={onEditExcerpt}
+              onAddExcerptToList={onAddExcerptToList}
+              onToggleExcerptFocus={onToggleExcerptFocus}
+              onDeleteExcerpt={onDeleteExcerpt}
               emptyText="Nothing here yet."
             />
           ))}
@@ -126,16 +138,22 @@ function PracticeGroup({
   accent = false,
   items,
   emptyText,
-  onOpenExcerpt,
   onPracticeExcerpt,
+  onEditExcerpt,
+  onAddExcerptToList,
+  onToggleExcerptFocus,
+  onDeleteExcerpt,
 }: {
   label: string;
   rating?: number;
   accent?: boolean;
   items: Excerpt[];
   emptyText: string;
-  onOpenExcerpt: (id: string) => void;
   onPracticeExcerpt: (id: string) => void;
+  onEditExcerpt: (id: string) => void;
+  onAddExcerptToList: (id: string) => void;
+  onToggleExcerptFocus: (id: string) => void;
+  onDeleteExcerpt: (id: string) => void;
 }) {
   return (
     <section className="practice-group">
@@ -153,8 +171,11 @@ function PracticeGroup({
             <ExcerptCard
               key={excerpt.id}
               excerpt={excerpt}
-              onOpen={() => onOpenExcerpt(excerpt.id)}
               onPractice={() => onPracticeExcerpt(excerpt.id)}
+              onEdit={() => onEditExcerpt(excerpt.id)}
+              onAddToList={() => onAddExcerptToList(excerpt.id)}
+              onToggleFocus={() => onToggleExcerptFocus(excerpt.id)}
+              onDelete={() => onDeleteExcerpt(excerpt.id)}
             />
           ))}
         </div>
