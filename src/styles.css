@@ -1,13 +1,13 @@
 :root {
-  --paper: #f2eee3;
-  --paper-2: #ebe5d7;
-  --card: #fbf8f0;
-  --ink: #1f1a14;
-  --muted: #82796b;
-  --faint: #c5bdaa;
-  --divider: #e4ddcb;
-  --divider-strong: #d6ceb9;
-  --accent: #7a2e2e;
+  --paper: #f3eee6;
+  --paper-2: #e7d9c8;
+  --card: #fffaf2;
+  --ink: #2a2119;
+  --muted: #7b6b5c;
+  --faint: #cbbba7;
+  --divider: #e6d8c5;
+  --divider-strong: #d3bea5;
+  --accent: #a16f49;
   --font-display: 'Newsreader', Georgia, serif;
   --font-ui: 'DM Sans', system-ui, sans-serif;
 }
@@ -270,10 +270,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   .sidebar-collapsed .sidebar,
   .sidebar { display: none; }
   .main-pane { height: auto; overflow: visible; }
-  .mobile-app-bar { position: sticky; top: 0; z-index: 10; min-height: 62px; padding: 10px 14px; border-bottom: 0.5px solid var(--divider-strong); background: rgba(235, 229, 215, 0.96); display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px; }
+  .mobile-app-bar { position: sticky; top: 0; z-index: 10; min-height: 62px; padding: 10px 14px; border-bottom: 0.5px solid var(--divider-strong); background: var(--paper-2); display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px; }
   .mobile-app-bar .brand-icon-button { border: 0; background: transparent; padding: 0; width: 40px; height: 40px; }
   .mobile-app-bar img { width: 40px; height: 40px; border-radius: 10px; display: block; }
-  .mobile-app-bar strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-size: 20px; font-weight: 500; }
+  .mobile-app-bar strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-size: 20px; font-weight: 500; color: var(--ink); }
   .dashboard { padding: 20px 18px 90px; }
   .mobile-list-filter { display: block; margin: -6px 0 14px; }
   .mobile-list-filter span { display: block; margin: 0 0 8px; color: var(--muted); font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; font-weight: 600; }
