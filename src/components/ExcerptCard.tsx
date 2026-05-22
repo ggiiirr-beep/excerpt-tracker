@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Excerpt } from '../types';
-import { relativePracticeDate } from '../lib/dates';
+import { formatShortDate, relativePracticeDate } from '../lib/dates';
 import { Dot, Stars } from './Atoms';
 
 export function ExcerptCard({
@@ -19,9 +19,23 @@ export function ExcerptCard({
   onDelete: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const recentPracticeDetails = excerpt.practiceHistory
+    .filter((entry) => entry.note.trim() || entry.recording)
+    .slice(0, 3);
+  const hasExpandedContent = Boolean(excerpt.notes.trim()) || recentPracticeDetails.length > 0;
+
+  const toggleExpanded = () => {
+    setExpanded((current) => !current);
+    setMenuOpen(false);
+  };
 
   return (
-    <article className="excerpt-card">
+    <article
+      className={`excerpt-card${expanded ? ' expanded' : ''}`}
+      aria-expanded={expanded}
+      onClick={toggleExpanded}
+    >
       <div className="card-main">
         <div className="title-row">
           {excerpt.isFocus && <Dot />}
@@ -39,12 +53,15 @@ export function ExcerptCard({
           type="button"
           aria-label={`Actions for ${excerpt.title}`}
           aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((current) => !current)}
+          onClick={(event) => {
+            event.stopPropagation();
+            setMenuOpen((current) => !current);
+          }}
         >
           ...
         </button>
         {menuOpen && (
-          <div className="card-menu">
+          <div className="card-menu" onClick={(event) => event.stopPropagation()}>
             <button type="button" onClick={() => {
               setMenuOpen(false);
               onEdit();
@@ -75,10 +92,44 @@ export function ExcerptCard({
       <button
         className="pill-button"
         type="button"
-        onClick={onPractice}
+        onClick={(event) => {
+          event.stopPropagation();
+          onPractice();
+        }}
       >
         Practice
       </button>
+      {expanded && (
+        <div className="card-expanded">
+          {hasExpandedContent ? (
+            <>
+              {excerpt.notes.trim() && (
+                <div className="card-expanded-block">
+                  <span className="card-expanded-label">Excerpt notes</span>
+                  <p>{excerpt.notes}</p>
+                </div>
+              )}
+              {recentPracticeDetails.map((entry) => (
+                <div className="card-expanded-block" key={entry.id}>
+                  <span className="card-expanded-label">{formatShortDate(entry.date)}</span>
+                  {entry.note.trim() && <p>{entry.note}</p>}
+                  {entry.recording && (
+                    <audio
+                      controls
+                      src={entry.recording.dataUrl}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <a href={entry.recording.dataUrl}>Open recording</a>
+                    </audio>
+                  )}
+                </div>
+              ))}
+            </>
+          ) : (
+            <p className="card-expanded-empty">No notes or recordings yet.</p>
+          )}
+        </div>
+      )}
     </article>
   );
 }
