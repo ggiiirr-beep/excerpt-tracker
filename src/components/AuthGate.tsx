@@ -20,6 +20,33 @@ export function AuthGate({ children }: { children: (user: User) => ReactNode }) 
 
     const finishAuth = async () => {
       const code = new URLSearchParams(window.location.search).get('code');
+      const hash = new URLSearchParams(window.location.hash.slice(1));
+      const accessToken = hash.get('access_token');
+      const refreshToken = hash.get('refresh_token');
+      const hashError = hash.get('error_description') || hash.get('error');
+
+      if (hashError) {
+        setMessage(hashError);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setLoading(false);
+        return;
+      }
+
+      if (accessToken && refreshToken) {
+        const { data, error } = await client.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (error) {
+          setMessage(error.message);
+        } else {
+          setSession(data.session);
+          window.history.replaceState({}, document.title, '/');
+        }
+        setLoading(false);
+        return;
+      }
+
       if (code) {
         const { data, error } = await client.auth.exchangeCodeForSession(code);
         if (error) {
