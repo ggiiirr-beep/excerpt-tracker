@@ -26,6 +26,12 @@ export function ExcerptFormModal({
   const [tags, setTags] = useState(initialValue?.tags.join(', ') ?? '');
   const [resources, setResources] = useState<ResourceLink[]>(initialValue?.resources.length ? initialValue.resources : []);
   const [error, setError] = useState('');
+  const isDirty = title !== (initialValue?.title ?? '')
+    || confidenceRating !== (initialValue?.confidenceRating ?? 1)
+    || isFocus !== (initialValue?.isFocus ?? false)
+    || notes !== (initialValue?.notes ?? '')
+    || tags !== (initialValue?.tags.join(', ') ?? '')
+    || JSON.stringify(resources) !== JSON.stringify(initialValue?.resources.length ? initialValue.resources : []);
 
   const updateResource = (id: string, patch: Partial<ResourceLink>) => {
     setResources((current) => current.map((resource) => (resource.id === id ? { ...resource, ...patch } : resource)));
@@ -57,6 +63,11 @@ export function ExcerptFormModal({
     });
   };
 
+  const cancel = () => {
+    if (isDirty && !window.confirm('Discard these changes?')) return;
+    onCancel();
+  };
+
   return (
     <div className="modal-backdrop">
       <div className="excerpt-form-modal" role="dialog" aria-modal="true" aria-labelledby="excerpt-form-title">
@@ -68,7 +79,7 @@ export function ExcerptFormModal({
 
         <div className="form-block">
           <FieldLabel>Title</FieldLabel>
-          <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Mozart Symphony No. 39" autoFocus />
+          <input value={title} onChange={(event) => setTitle(event.target.value)} autoFocus />
         </div>
 
         <div className="form-block">
@@ -83,12 +94,12 @@ export function ExcerptFormModal({
 
         <div className="form-block">
           <FieldLabel>Notes</FieldLabel>
-          <textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="What should future you remember?" />
+          <textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
         </div>
 
         <div className="form-block">
           <FieldLabel>Tags</FieldLabel>
-          <input value={tags} onChange={(event) => setTags(event.target.value)} placeholder="audition, tutti, current" />
+          <input value={tags} onChange={(event) => setTags(event.target.value)} />
         </div>
 
         <div className="form-block">
@@ -102,8 +113,8 @@ export function ExcerptFormModal({
             <div className="resources-list">
               {resources.map((resource) => (
                 <div className="resource-row" key={resource.id}>
-                  <input value={resource.label} onChange={(event) => updateResource(resource.id, { label: event.target.value })} placeholder="Label" />
-                  <input value={resource.url} onChange={(event) => updateResource(resource.id, { url: event.target.value })} placeholder="https://..." />
+                  <input value={resource.label} onChange={(event) => updateResource(resource.id, { label: event.target.value })} aria-label="Resource label" />
+                  <input value={resource.url} onChange={(event) => updateResource(resource.id, { url: event.target.value })} aria-label="Resource URL" />
                   <button type="button" onClick={() => setResources((current) => current.filter((item) => item.id !== resource.id))}>
                     Remove
                   </button>
@@ -118,7 +129,7 @@ export function ExcerptFormModal({
         {error && <p className="error-text">{error}</p>}
 
         <div className="modal-actions">
-          <button className="text-button" type="button" onClick={onCancel}>Cancel</button>
+          <button className="text-button" type="button" onClick={cancel}>Cancel</button>
           <button className="pill-button" type="button" onClick={save}>{mode === 'create' ? 'Create excerpt' : 'Save changes'}</button>
         </div>
       </div>

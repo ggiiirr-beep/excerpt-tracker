@@ -20,6 +20,7 @@ button { -webkit-tap-highlight-color: transparent; }
 button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .app-shell { min-height: 100dvh; display: flex; background: var(--paper); }
+.mobile-app-bar { display: none; }
 .sidebar { width: 268px; flex: 0 0 268px; min-height: 100dvh; position: sticky; top: 0; padding: 28px 16px 22px; background: var(--paper-2); border-right: 0.5px solid var(--divider-strong); display: flex; flex-direction: column; gap: 14px; }
 .brand-mark { min-height: 54px; padding: 0 6px; display: flex; align-items: center; gap: 10px; }
 .sidebar .brand-icon-button { border: 0; background: transparent; color: var(--ink); min-height: 42px; width: 42px; padding: 0; display: grid; place-items: center; cursor: pointer; border-radius: 10px; }
@@ -62,6 +63,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .mobile-header span { display: block; margin-top: 10px; font-family: var(--font-display); font-style: italic; color: var(--muted); }
 .mobile-list-filter { display: none; }
 .dashboard-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 18px; }
+.dashboard-empty { margin-top: 28px; background: var(--card); border: 0.5px solid var(--divider); border-radius: 8px; padding: 26px; }
+.dashboard-empty h2 { margin: 0 0 8px; font-size: 28px; }
+.dashboard-empty p { margin: 0 0 18px; color: var(--muted); font-family: var(--font-display); font-style: italic; }
 
 .practice-group { margin-top: 28px; }
 .practice-group-header { min-height: 50px; border-bottom: 0.5px solid var(--divider); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -119,6 +123,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .cue-tool .recording-active { border-color: rgba(122, 46, 46, 0.18); background: rgba(122, 46, 46, 0.08); color: var(--accent); }
 .cue-tool audio { width: 100%; height: 34px; opacity: 0.82; }
 .cue-tool-error { grid-column: 1 / -1; margin: 0; color: var(--accent); font-size: 13px; }
+.cue-tool-note { grid-column: 1 / -1; margin: 4px 0 0; color: var(--muted); font-size: 12px; }
 .details-toggle-wrap { padding: 12px 0 8px; text-align: center; }
 .details-toggle { border: 0; background: transparent; color: var(--muted); min-height: 44px; padding: 10px 16px; cursor: pointer; font-family: var(--font-display); font-style: italic; font-size: 14px; }
 .toggle-chevron { display: inline-block; transition: transform 180ms ease; }
@@ -156,9 +161,14 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .history-recording audio { width: min(100%, 360px); height: 38px; }
 .danger-button { border: 0; color: var(--accent); background: rgba(122, 46, 46, 0.07); min-height: 44px; padding: 12px 16px; border-radius: 8px; cursor: pointer; margin-top: 24px; }
 .danger-button.compact { margin-top: 0; }
+.detail-actions { display: grid; gap: 10px; margin-top: 28px; }
+.detail-actions .danger-button { margin-top: 0; }
 
 .list-card { padding: 18px; margin-bottom: 14px; }
+.active-list-card { border-color: var(--divider-strong); box-shadow: inset 3px 0 0 var(--accent); }
 .list-card > input { font-family: var(--font-display); font-size: 22px; margin-bottom: 14px; }
+.list-search { margin: 0 0 18px; }
+.list-search input { width: 100%; min-height: 44px; background: var(--card); border: 0.5px solid var(--divider); border-radius: 8px; padding: 12px 14px; color: var(--ink); }
 .list-members { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
 .list-members label { min-height: 44px; display: flex; align-items: center; gap: 10px; }
 .list-members input { width: 20px; height: 20px; accent-color: var(--accent); }
@@ -179,9 +189,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .email-auth-form { display: grid; gap: 14px; }
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: rgba(31, 26, 20, 0.34); padding: 24px; }
-.practice-modal, .excerpt-form-modal { width: min(480px, 100%); background: var(--paper); border-radius: 24px; box-shadow: 0 30px 80px rgba(31, 26, 20, 0.28); padding: 28px; }
+.practice-modal, .excerpt-form-modal, .list-form-modal { width: min(480px, 100%); background: var(--paper); border-radius: 24px; box-shadow: 0 30px 80px rgba(31, 26, 20, 0.28); padding: 28px; }
 .excerpt-form-modal { width: min(640px, 100%); max-height: min(88dvh, 820px); overflow: auto; }
-.excerpt-form-modal header h2 { margin: 0; font-family: var(--font-display); font-size: 32px; font-weight: 400; }
+.excerpt-form-modal header h2, .list-form-modal h2 { margin: 0; font-family: var(--font-display); font-size: 32px; font-weight: 400; }
 .excerpt-form-modal .form-block { margin-top: 18px; }
 .excerpt-form-modal .star-picker { justify-content: flex-start; }
 .excerpt-form-modal .form-check-row { margin-top: 16px; }
@@ -211,6 +221,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   .app-shell { display: block; }
   .sidebar { display: none; }
   .main-pane { height: auto; overflow: visible; }
+  .mobile-app-bar { position: sticky; top: 0; z-index: 10; min-height: 62px; padding: 10px 14px; border-bottom: 0.5px solid var(--divider-strong); background: rgba(235, 229, 215, 0.96); display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 8px; }
+  .mobile-app-bar .brand-icon-button { border: 0; background: transparent; padding: 0; width: 40px; height: 40px; }
+  .mobile-app-bar img { width: 40px; height: 40px; border-radius: 10px; display: block; }
+  .mobile-app-bar strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-size: 20px; font-weight: 500; }
+  .mobile-app-bar button:not(.brand-icon-button) { border: 0; min-height: 38px; border-radius: 999px; background: rgba(31, 26, 20, 0.08); color: var(--ink); padding: 8px 11px; }
   .dashboard { padding: 20px 18px 90px; }
   .mobile-list-filter { display: block; margin: -6px 0 14px; }
   .mobile-list-filter span { display: block; margin: 0 0 8px; color: var(--muted); font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; font-weight: 600; }
@@ -223,7 +238,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   .practice-group-list { display: block; padding-top: 0; }
   .all-excerpts-heading { display: block; margin-top: 30px; }
   .all-excerpts-heading span { display: block; margin-top: 8px; }
-  .excerpt-card { border-radius: 0; border-left: 0; border-right: 0; border-bottom: 0; padding: 16px 0; }
+  .excerpt-card { border-radius: 0; border-left: 0; border-right: 0; border-bottom: 0; padding: 16px 0; flex-wrap: wrap; }
+  .excerpt-card .pill-button { width: 100%; }
   .title-row h3 { font-size: 18px; }
   .resource-row { grid-template-columns: 1fr; }
   .view-heading { align-items: flex-start; }
@@ -231,7 +247,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   .library-row small { display: block; margin-top: 8px; }
   .modal-backdrop { align-items: end; padding: 0; }
   .practice-modal { border-radius: 24px 24px 0 0; padding: 12px 24px 28px; }
-  .excerpt-form-modal { width: 100%; max-height: 92dvh; border-radius: 24px 24px 0 0; padding: 12px 24px 28px; }
+  .excerpt-form-modal, .list-form-modal { width: 100%; max-height: 92dvh; border-radius: 24px 24px 0 0; padding: 12px 24px 28px; }
   .grabber { display: block; }
   .recording-preview { grid-template-columns: 1fr; }
   .cue-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }

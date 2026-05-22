@@ -26,7 +26,7 @@ export function PracticeModal({
         </div>
         <label className="note-label">
           Practice note <span>optional</span>
-          <textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="What clicked? What's next?" />
+          <textarea value={note} onChange={(event) => setNote(event.target.value)} />
         </label>
 
         <button className="primary-button" type="button" onClick={() => onSave(rating, note)}>

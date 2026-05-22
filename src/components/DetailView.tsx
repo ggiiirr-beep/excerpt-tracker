@@ -24,7 +24,6 @@ export function DetailView({
   pendingRecording: SessionRecording | null;
   onPendingRecordingChange: (recording: SessionRecording | null) => void;
 }) {
-  const [showDetails, setShowDetails] = useState(false);
   const [notesDraft, setNotesDraft] = useState(excerpt.notes);
   const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'blocked'>('idle');
   const [recordingError, setRecordingError] = useState('');
@@ -37,7 +36,6 @@ export function DetailView({
   );
 
   useEffect(() => {
-    setShowDetails(false);
     setNotesDraft(excerpt.notes);
   }, [excerpt.id, excerpt.notes]);
 
@@ -160,97 +158,92 @@ export function DetailView({
               </button>
             )}
           </div>
+          {pendingRecording && <p className="cue-tool-note">Recording will be saved with your next logged practice session.</p>}
           {recordingError && <p className="cue-tool-error">{recordingError}</p>}
         </div>
         <input ref={fileInputRef} type="file" accept="application/pdf" hidden onChange={attachPdf} />
       </div>
 
       <button className="primary-button practice-wide" type="button" onClick={onPractice}>Practice finished</button>
-      <button className="small-button detail-edit-button" type="button" onClick={onEdit}>Edit information</button>
 
-      <div className="details-toggle-wrap">
-        <button className="details-toggle" type="button" onClick={() => setShowDetails((current) => !current)}>
-          {showDetails ? 'hide details' : 'view details'} <span className={showDetails ? 'toggle-chevron open' : 'toggle-chevron'}>⌄</span>
-        </button>
-      </div>
+      <div className="details-panel">
+        <label className="focus-check-row">
+          <input type="checkbox" checked={excerpt.isFocus} onChange={(event) => onChange({ isFocus: event.target.checked })} />
+          <span>In focus</span>
+          <em>{excerpt.isFocus ? 'on your shortlist' : ''}</em>
+        </label>
 
-      {showDetails && (
-        <div className="details-panel">
-          <label className="focus-check-row">
-            <input type="checkbox" checked={excerpt.isFocus} onChange={(event) => onChange({ isFocus: event.target.checked })} />
-            <span>In focus</span>
-            <em>{excerpt.isFocus ? 'on your shortlist' : ''}</em>
-          </label>
+        <div className="detail-grid">
+          <div className="stat"><span>Practice count</span><strong>{excerpt.practiceCount}</strong></div>
+          <div className="stat"><span>Last practiced</span><strong>{relativePracticeDate(excerpt.lastPracticedDate)}</strong></div>
+          <div className="stat"><span>Date added</span><strong>{formatDate(excerpt.dateAdded)}</strong></div>
+          <div className="stat"><span>Lists</span><strong>{listNames.length ? listNames.join(', ') : 'None'}</strong></div>
+        </div>
 
-          <div className="detail-grid">
-            <div className="stat"><span>Practice count</span><strong>{excerpt.practiceCount}</strong></div>
-            <div className="stat"><span>Last practiced</span><strong>{relativePracticeDate(excerpt.lastPracticedDate)}</strong></div>
-            <div className="stat"><span>Date added</span><strong>{formatDate(excerpt.dateAdded)}</strong></div>
-            <div className="stat"><span>Lists</span><strong>{listNames.length ? listNames.join(', ') : 'None'}</strong></div>
+        <div className="form-block">
+          <FieldLabel>Notes</FieldLabel>
+          <textarea
+            value={notesDraft}
+            onChange={(event) => setNotesDraft(event.target.value)}
+            onBlur={() => onChange({ notes: notesDraft })}
+          />
+        </div>
+
+        <div className="form-block">
+          <FieldLabel>Tags</FieldLabel>
+          <div className="tag-list">
+            {excerpt.tags.length ? excerpt.tags.map((tag) => <span key={tag}>{tag}</span>) : <p className="plain-empty">no tags</p>}
           </div>
+        </div>
 
-          <div className="form-block">
-            <FieldLabel>Notes</FieldLabel>
-            <textarea
-              value={notesDraft}
-              onChange={(event) => setNotesDraft(event.target.value)}
-              onBlur={() => onChange({ notes: notesDraft })}
-              placeholder="What are you working on?"
-            />
-          </div>
-
-          <div className="form-block">
-            <FieldLabel>Tags</FieldLabel>
-            <div className="tag-list">
-              {excerpt.tags.length ? excerpt.tags.map((tag) => <span key={tag}>{tag}</span>) : <p className="plain-empty">no tags</p>}
-            </div>
-          </div>
-
-          <div className="form-block">
-            <FieldLabel>References</FieldLabel>
-            <div className="reference-list">
-              {excerpt.resources.length ? (
-                excerpt.resources.map((resource: ResourceLink) => (
-                  <a href={resource.url} target="_blank" rel="noreferrer" key={resource.id}>
-                    <span>↗</span>
-                    {resource.label || resource.url}
-                  </a>
-                ))
-              ) : (
-                <p className="plain-empty">nothing linked yet</p>
-              )}
-            </div>
-          </div>
-
-          <div className="form-block">
-            <FieldLabel>Practice history</FieldLabel>
-            {excerpt.practiceHistory.length ? (
-              <div className="history-list">
-                {[...excerpt.practiceHistory]
-                  .sort((a, b) => b.date.localeCompare(a.date))
-                  .map((entry) => (
-                    <div className="history-row" key={entry.id}>
-                      <time>{formatShortDate(entry.date)}</time>
-                      <div>
-                        <Stars rating={entry.rating} size={11} />
-                        {entry.note && <p>{entry.note}</p>}
-                        {entry.recording && (
-                          <div className="history-recording">
-                            <span>{entry.recording.name}</span>
-                            <audio controls src={entry.recording.dataUrl} />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-              </div>
+        <div className="form-block">
+          <FieldLabel>References</FieldLabel>
+          <div className="reference-list">
+            {excerpt.resources.length ? (
+              excerpt.resources.map((resource: ResourceLink) => (
+                <a href={resource.url} target="_blank" rel="noreferrer" key={resource.id}>
+                  <span>↗</span>
+                  {resource.label || resource.url}
+                </a>
+              ))
             ) : (
-              <p className="plain-empty">no sessions yet - first one is the hardest</p>
+              <p className="plain-empty">nothing linked yet</p>
             )}
           </div>
+        </div>
+
+        <div className="form-block">
+          <FieldLabel>Practice history</FieldLabel>
+          {excerpt.practiceHistory.length ? (
+            <div className="history-list">
+              {[...excerpt.practiceHistory]
+                .sort((a, b) => b.date.localeCompare(a.date))
+                .map((entry) => (
+                  <div className="history-row" key={entry.id}>
+                    <time>{formatShortDate(entry.date)}</time>
+                    <div>
+                      <Stars rating={entry.rating} size={11} />
+                      {entry.note && <p>{entry.note}</p>}
+                      {entry.recording && (
+                        <div className="history-recording">
+                          <span>{entry.recording.name}</span>
+                          <audio controls src={entry.recording.dataUrl} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <p className="plain-empty">no sessions yet - first one is the hardest</p>
+          )}
+        </div>
+
+        <div className="detail-actions">
+          <button className="small-button detail-edit-button" type="button" onClick={onEdit}>Edit information</button>
           <button className="danger-button" type="button" onClick={onDelete}>Delete excerpt</button>
         </div>
-      )}
+      </div>
     </section>
   );
 }

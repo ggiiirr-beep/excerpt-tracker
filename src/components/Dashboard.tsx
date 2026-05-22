@@ -55,7 +55,7 @@ export function Dashboard({
   onSelectList: (id: string) => void;
 }) {
   const focusItems = sortOldestPracticedFirst(excerpts.filter((excerpt) => excerpt.isFocus));
-  const groups = buildPracticeGroups(excerpts);
+  const groups = buildPracticeGroups(excerpts).filter((group) => group.items.length > 0);
   const dateLine = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 
   return (
@@ -81,31 +81,41 @@ export function Dashboard({
         </select>
       </label>
 
-      <PracticeGroup
-        label="Focus"
-        accent
-        items={focusItems}
-        onOpenExcerpt={onOpenExcerpt}
-        onPracticeExcerpt={onPracticeExcerpt}
-        emptyText="Nothing in focus yet."
-      />
+      {!excerpts.length ? (
+        <div className="dashboard-empty">
+          <h2>No excerpts yet</h2>
+          <p>Create your first excerpt, then it will show up here by confidence level.</p>
+          <button className="pill-button" type="button" onClick={onCreateExcerpt}>New excerpt</button>
+        </div>
+      ) : (
+        <>
+          <PracticeGroup
+            label="Focus"
+            accent
+            items={focusItems}
+            onOpenExcerpt={onOpenExcerpt}
+            onPracticeExcerpt={onPracticeExcerpt}
+            emptyText="Nothing in focus yet."
+          />
 
-      <div className="all-excerpts-heading">
-        <p>All excerpts</p>
-        <span>Grouped by confidence · oldest practice first</span>
-      </div>
+          <div className="all-excerpts-heading">
+            <p>All excerpts</p>
+            <span>Grouped by confidence · oldest practice first</span>
+          </div>
 
-      {groups.map((group) => (
-        <PracticeGroup
-          key={group.key}
-          rating={group.rating}
-          label={group.label}
-          items={group.items}
-          onOpenExcerpt={onOpenExcerpt}
-          onPracticeExcerpt={onPracticeExcerpt}
-          emptyText="Nothing here yet."
-        />
-      ))}
+          {groups.map((group) => (
+            <PracticeGroup
+              key={group.key}
+              rating={group.rating}
+              label={group.label}
+              items={group.items}
+              onOpenExcerpt={onOpenExcerpt}
+              onPracticeExcerpt={onPracticeExcerpt}
+              emptyText="Nothing here yet."
+            />
+          ))}
+        </>
+      )}
     </section>
   );
 }

@@ -123,7 +123,21 @@ function SignedInApp({ user }: { user: User }) {
   };
 
   const updateLists = (lists: typeof data.lists) => {
+    if (selectedListId !== 'all' && !lists.some((list) => list.id === selectedListId)) {
+      setSelectedListId('all');
+    }
     persistData({ ...data, lists });
+  };
+
+  const createList = (name: string) => {
+    const id = makeId('list');
+    persistData({
+      ...data,
+      lists: [...data.lists, { id, name, excerptIds: [] }],
+    });
+    setSelectedListId(id);
+    setSelectedId(null);
+    setView('lists');
   };
 
   const deleteSelectedExcerpt = () => {
@@ -194,25 +208,26 @@ function SignedInApp({ user }: { user: User }) {
         }}>
           Lists
         </button>
-        {selectedExcerpt && (
-          <div className="sidebar-excerpt-list">
-            <p>Excerpts</p>
-            {visibleExcerpts.length ? (
-              visibleExcerpts.map((excerpt) => (
-                <button
-                  className={excerpt.id === selectedExcerpt.id ? 'active' : ''}
-                  type="button"
-                  key={excerpt.id}
-                  onClick={() => setSelectedId(excerpt.id)}
-                >
-                  <span>{excerpt.title}</span>
-                </button>
-              ))
-            ) : (
-              <small>No excerpts in this list.</small>
-            )}
-          </div>
-        )}
+        <div className="sidebar-excerpt-list">
+          <p>Excerpts</p>
+          {visibleExcerpts.length ? (
+            visibleExcerpts.map((excerpt) => (
+              <button
+                className={excerpt.id === selectedExcerpt?.id ? 'active' : ''}
+                type="button"
+                key={excerpt.id}
+                onClick={() => {
+                  setSelectedId(excerpt.id);
+                  setView('dashboard');
+                }}
+              >
+                <span>{excerpt.title}</span>
+              </button>
+            ))
+          ) : (
+            <small>No excerpts in this list.</small>
+          )}
+        </div>
         <p className="sidebar-quote">“The score is a map.<br />The practice is the territory.”</p>
         <div className="sync-panel">
           <span>{syncState === 'loading' ? 'Loading cloud data' : syncState === 'saving' ? 'Saving' : syncState === 'error' ? 'Sync issue' : 'Synced'}</span>
@@ -220,6 +235,20 @@ function SignedInApp({ user }: { user: User }) {
           <button type="button" onClick={() => supabase?.auth.signOut()}>Sign out</button>
         </div>
       </aside>
+
+      <header className="mobile-app-bar">
+        <button className="brand-icon-button" type="button" onClick={goHome} aria-label="Go to main list">
+          <img src={logoUrl} alt="" />
+        </button>
+        <strong>Excerpt Tracker</strong>
+        <button type="button" onClick={openCreateExcerpt}>New</button>
+        <button type="button" onClick={() => {
+          setSelectedId(null);
+          setView('lists');
+        }}>
+          Lists
+        </button>
+      </header>
 
       <main className="main-pane">
         {selectedExcerpt ? (
@@ -240,7 +269,9 @@ function SignedInApp({ user }: { user: User }) {
           <ListsView
             excerpts={data.excerpts}
             lists={data.lists}
+            selectedListId={selectedListId}
             onBack={() => setView('dashboard')}
+            onCreateList={createList}
             onChangeLists={updateLists}
           />
         ) : (
