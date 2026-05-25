@@ -98,7 +98,6 @@ export function Dashboard({
         <div className="dashboard-empty">
           <h2>No excerpts yet</h2>
           <p>Create your first excerpt, then it will show up here by confidence level.</p>
-          <button className="pill-button" type="button" onClick={onCreateExcerpt}>New excerpt</button>
         </div>
       ) : (
         <>

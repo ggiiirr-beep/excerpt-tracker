@@ -5,10 +5,10 @@ import logoUrl from './assets/logo.png';
 import { freshEmptyData } from './lib/appData';
 import { repository } from './lib/repository';
 import { supabase } from './lib/supabaseClient';
-import { todayIso } from './lib/dates';
-import { makeId } from './components/Atoms';
+import { relativePracticeDate, todayIso } from './lib/dates';
+import { makeId, Stars } from './components/Atoms';
 import { AuthGate } from './components/AuthGate';
-import { Dashboard } from './components/Dashboard';
+import { buildPracticeGroups, Dashboard } from './components/Dashboard';
 import { DetailView } from './components/DetailView';
 import { ExcerptFormModal } from './components/ExcerptFormModal';
 import { ListMembershipModal } from './components/ListMembershipModal';
@@ -186,6 +186,33 @@ function SignedInApp({ user }: { user: User }) {
     updateExcerpt(id, { isFocus: !excerpt.isFocus });
   };
 
+  const deletePracticeEntry = (excerptId: string, entryId: string) => {
+    const excerpt = data.excerpts.find((item) => item.id === excerptId);
+    if (!excerpt) return;
+    const confirmed = window.confirm('Delete this practice session? Its note and recording will also be removed.');
+    if (!confirmed) return;
+    const nextHistory = excerpt.practiceHistory.filter((entry) => entry.id !== entryId);
+    const latestEntry = [...nextHistory].sort((a, b) => b.date.localeCompare(a.date))[0];
+    updateExcerpt(excerptId, {
+      practiceHistory: nextHistory,
+      practiceCount: nextHistory.length,
+      lastPracticedDate: latestEntry?.date ?? null,
+      ...(latestEntry ? { confidenceRating: latestEntry.rating } : {}),
+    });
+  };
+
+  const deletePracticeRecording = (excerptId: string, entryId: string) => {
+    const excerpt = data.excerpts.find((item) => item.id === excerptId);
+    if (!excerpt) return;
+    const confirmed = window.confirm('Remove this recording from the practice session? The session will stay.');
+    if (!confirmed) return;
+    updateExcerpt(excerptId, {
+      practiceHistory: excerpt.practiceHistory.map((entry) => (
+        entry.id === entryId ? { ...entry, recording: null } : entry
+      )),
+    });
+  };
+
   const saveListMembership = (excerptId: string, listIds: string[], newListName: string) => {
     const newListId = newListName ? makeId('list') : null;
     const nextSelectedIds = new Set(listIds);
@@ -255,34 +282,44 @@ function SignedInApp({ user }: { user: User }) {
             ))}
           </select>
         </div>
-        <button type="button" onClick={openCreateExcerpt}>New excerpt</button>
+        <button className="sidebar-action-button" type="button" onClick={openCreateExcerpt}>New excerpt</button>
         <button type="button" onClick={() => {
           setSelectedId(null);
           setView('lists');
-        }}>
+        }} className="sidebar-action-button secondary">
           Edit lists
         </button>
         <div className="sidebar-excerpt-list">
           <p>Excerpts</p>
           {visibleExcerpts.length ? (
-            visibleExcerpts.map((excerpt) => (
-              <button
-                className={excerpt.id === selectedExcerpt?.id ? 'active' : ''}
-                type="button"
-                key={excerpt.id}
-                onClick={() => {
-                  setSelectedId(excerpt.id);
-                  setView('dashboard');
-                }}
-              >
-                <span>{excerpt.title}</span>
-              </button>
-            ))
+            buildPracticeGroups(visibleExcerpts)
+              .filter((group) => group.items.length > 0)
+              .map((group) => (
+                <div className="sidebar-rating-group" key={group.key}>
+                  <div className="sidebar-rating-heading">
+                    {group.rating !== undefined && <Stars rating={group.rating} size={11} />}
+                    {group.rating === 0 && <span>No stars</span>}
+                  </div>
+                  {group.items.map((excerpt) => (
+                    <button
+                      className={excerpt.id === selectedExcerpt?.id ? 'active' : ''}
+                      type="button"
+                      key={excerpt.id}
+                      onClick={() => {
+                        setSelectedId(excerpt.id);
+                        setView('dashboard');
+                      }}
+                    >
+                      <span>{excerpt.title}</span>
+                      <small>{relativePracticeDate(excerpt.lastPracticedDate)}</small>
+                    </button>
+                  ))}
+                </div>
+              ))
           ) : (
             <small>No excerpts in this list.</small>
           )}
         </div>
-        <p className="sidebar-quote">“The score is a map.<br />The practice is the territory.”</p>
         <div className="sync-panel">
           <span>{syncState === 'loading' ? 'Loading cloud data' : syncState === 'saving' ? 'Saving' : syncState === 'error' ? 'Sync issue' : 'Synced'}</span>
           {syncMessage && <small>{syncMessage}</small>}
@@ -308,6 +345,8 @@ function SignedInApp({ user }: { user: User }) {
             onEdit={() => openEditExcerpt(selectedExcerpt.id)}
             onManageLists={() => setListMembershipExcerptId(selectedExcerpt.id)}
             onDelete={() => deleteExcerpt(selectedExcerpt.id)}
+            onDeletePracticeEntry={(entryId) => deletePracticeEntry(selectedExcerpt.id, entryId)}
+            onDeletePracticeRecording={(entryId) => deletePracticeRecording(selectedExcerpt.id, entryId)}
             pendingRecording={pendingRecordings[selectedExcerpt.id] ?? null}
             onPendingRecordingChange={(recording) => {
               setPendingRecordings((current) => ({ ...current, [selectedExcerpt.id]: recording }));

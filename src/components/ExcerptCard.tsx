@@ -24,7 +24,7 @@ export function ExcerptCard({
   const recentPracticeDetails = excerpt.practiceHistory
     .filter((entry) => entry.note.trim() || entry.recording)
     .slice(0, 3);
-  const hasExpandedContent = Boolean(excerpt.notes.trim()) || recentPracticeDetails.length > 0;
+  const hasExpandedContent = recentPracticeDetails.length > 0;
 
   const toggleExpanded = () => {
     setExpanded((current) => !current);
@@ -79,7 +79,7 @@ export function ExcerptCard({
             setMenuOpen((current) => !current);
           }}
         >
-          ...
+          ⋮
         </button>
         {menuOpen && (
           <div className="card-menu" onClick={(event) => event.stopPropagation()}>
@@ -117,17 +117,12 @@ export function ExcerptCard({
           event.stopPropagation();
           onPractice();
         }}
+        aria-label={`Open ${excerpt.title}`}
       >
-        Practice
+        ›
       </button>
       {expanded && hasExpandedContent && (
         <div className="card-expanded">
-          {excerpt.notes.trim() && (
-            <div className="card-expanded-block">
-              <span className="card-expanded-label">Excerpt notes</span>
-              <p>{excerpt.notes}</p>
-            </div>
-          )}
           {recentPracticeDetails.map((entry) => (
             <div className="card-expanded-block" key={entry.id}>
               <span className="card-expanded-label">{formatShortDate(entry.date)}</span>

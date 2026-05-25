@@ -22,13 +22,11 @@ export function ExcerptFormModal({
   const [title, setTitle] = useState(initialValue?.title ?? '');
   const [confidenceRating, setConfidenceRating] = useState<ExcerptConfidenceRating>(initialValue?.confidenceRating ?? 0);
   const [isFocus, setIsFocus] = useState(initialValue?.isFocus ?? false);
-  const [notes, setNotes] = useState(initialValue?.notes ?? '');
   const [resources, setResources] = useState<ResourceLink[]>(initialValue?.resources.length ? initialValue.resources : []);
   const [error, setError] = useState('');
   const isDirty = title !== (initialValue?.title ?? '')
     || confidenceRating !== (initialValue?.confidenceRating ?? 0)
     || isFocus !== (initialValue?.isFocus ?? false)
-    || notes !== (initialValue?.notes ?? '')
     || JSON.stringify(resources) !== JSON.stringify(initialValue?.resources.length ? initialValue.resources : []);
 
   const updateResource = (id: string, patch: Partial<ResourceLink>) => {
@@ -46,7 +44,7 @@ export function ExcerptFormModal({
       title: cleanTitle,
       confidenceRating,
       isFocus,
-      notes,
+      notes: initialValue?.notes ?? '',
       resources: resources
         .map((resource) => ({
           ...resource,
@@ -90,11 +88,6 @@ export function ExcerptFormModal({
           <input type="checkbox" checked={isFocus} onChange={(event) => setIsFocus(event.target.checked)} />
           <span>Keep this in focus</span>
         </label>
-
-        <div className="form-block">
-          <FieldLabel>Notes</FieldLabel>
-          <textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
-        </div>
 
         <div className="form-block">
           <div className="block-heading">
