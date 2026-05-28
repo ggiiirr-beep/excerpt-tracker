@@ -1,6 +1,8 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import type { Excerpt, RepertoireList, ResourceLink, SessionRecording } from '../types';
 import { formatDate, formatShortDate, relativePracticeDate } from '../lib/dates';
+import { removeStoredFile, signedFileUrl, uploadPdfAttachment, uploadRecordingBlob } from '../lib/fileStorage';
+import { useFileUrl } from '../lib/useFileUrl';
 import { confidenceLabel, FieldLabel, makeId, Stars } from './Atoms';
 
 export function DetailView({
@@ -16,6 +18,7 @@ export function DetailView({
   onDeletePracticeRecording,
   pendingRecording,
   onPendingRecordingChange,
+  userId,
 }: {
   excerpt: Excerpt;
   lists: RepertoireList[];
@@ -29,12 +32,14 @@ export function DetailView({
   onDeletePracticeRecording: (entryId: string) => void;
   pendingRecording: SessionRecording | null;
   onPendingRecordingChange: (recording: SessionRecording | null) => void;
+  userId: string;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editingReferences, setEditingReferences] = useState(false);
   const [resourceDrafts, setResourceDrafts] = useState<ResourceLink[]>(excerpt.resources);
   const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'blocked'>('idle');
   const [recordingError, setRecordingError] = useState('');
+  const [historyRecordingUrls, setHistoryRecordingUrls] = useState<Record<string, string>>({});
   const menuRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -83,44 +88,84 @@ export function DetailView({
   const attachPdf = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      onChange({
-        pdfAttachment: {
-          name: file.name,
-          size: file.size,
-          dataUrl: String(reader.result),
-        },
+    const previousPath = excerpt.pdfAttachment?.path;
+    uploadPdfAttachment(userId, excerpt.id, file)
+      .then(async (pdfAttachment) => {
+        if (previousPath) {
+          try {
+            await removeStoredFile(previousPath);
+          } catch {
+            // A failed cleanup should not block the newly uploaded score from being saved.
+          }
+        }
+        onChange({ pdfAttachment });
+      })
+      .catch(() => {
+        setRecordingError('Could not upload the PDF. Check that Supabase Storage is set up.');
       });
-    };
-    reader.readAsDataURL(file);
     event.target.value = '';
+  };
+
+  const pdfUrl = useFileUrl(excerpt.pdfAttachment);
+  const pendingRecordingUrl = useFileUrl(pendingRecording);
+
+  useEffect(() => {
+    let alive = true;
+
+    Promise.all(excerpt.practiceHistory.map(async (entry) => {
+      if (!entry.recording) return [entry.id, ''] as const;
+      if (!entry.recording.path) return [entry.id, entry.recording.dataUrl ?? ''] as const;
+
+      try {
+        return [entry.id, await signedFileUrl(entry.recording.path)] as const;
+      } catch {
+        return [entry.id, entry.recording.dataUrl ?? ''] as const;
+      }
+    })).then((entries) => {
+      if (!alive) return;
+      setHistoryRecordingUrls(Object.fromEntries(entries.filter(([, value]) => value)));
+    });
+
+    return () => {
+      alive = false;
+    };
+  }, [excerpt.practiceHistory]);
+
+  const removePdf = () => {
+    if (!window.confirm('Remove this PDF from the excerpt?')) return;
+    const path = excerpt.pdfAttachment?.path;
+    onChange({ pdfAttachment: null });
+    if (path) {
+      removeStoredFile(path).catch(() => {
+        setRecordingError('The PDF was removed from the excerpt, but the stored file could not be deleted.');
+      });
+    }
+  };
+
+  const removePendingRecording = () => {
+    if (!window.confirm('Remove this pending recording?')) return;
+    const path = pendingRecording?.path;
+    onPendingRecordingChange(null);
+    if (path) {
+      removeStoredFile(path).catch(() => {
+        setRecordingError('The recording was removed here, but the stored file could not be deleted.');
+      });
+    }
   };
 
   const pdfSize = excerpt.pdfAttachment
     ? `${Math.max(1, Math.round(excerpt.pdfAttachment.size / 1024))} KB`
     : '';
 
-  const pdfObjectUrl = useMemo(() => {
-    if (!excerpt.pdfAttachment) return null;
-    const [metadata, base64Data] = excerpt.pdfAttachment.dataUrl.split(',');
-    if (!base64Data) return excerpt.pdfAttachment.dataUrl;
-
-    const mimeType = metadata.match(/data:(.*);base64/)?.[1] || 'application/pdf';
-    const binary = atob(base64Data);
-    const bytes = new Uint8Array(binary.length);
-    for (let index = 0; index < binary.length; index += 1) {
-      bytes[index] = binary.charCodeAt(index);
+  const saveRecordedBlob = async (blob: Blob, mimeType: string) => {
+    const name = `Practice recording ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+    try {
+      const recording = await uploadRecordingBlob(userId, excerpt.id, blob, mimeType, name);
+      onPendingRecordingChange(recording);
+    } catch {
+      setRecordingError('Could not upload the recording. Check that Supabase Storage is set up.');
     }
-
-    return URL.createObjectURL(new Blob([bytes], { type: mimeType }));
-  }, [excerpt.pdfAttachment]);
-
-  useEffect(() => {
-    return () => {
-      if (pdfObjectUrl?.startsWith('blob:')) URL.revokeObjectURL(pdfObjectUrl);
-    };
-  }, [pdfObjectUrl]);
+  };
 
   const startRecording = async () => {
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
@@ -144,20 +189,18 @@ export function DetailView({
         stream.getTracks().forEach((track) => track.stop());
         const mimeType = recorder.mimeType || 'audio/webm';
         const blob = new Blob(chunksRef.current, { type: mimeType });
-        const reader = new FileReader();
-        reader.onload = () => {
-          onPendingRecordingChange({
-            name: `Practice recording ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`,
-            mimeType,
-            dataUrl: String(reader.result),
-          });
-        };
-        reader.readAsDataURL(blob);
+        void saveRecordedBlob(blob, mimeType);
         setRecordingState('idle');
       };
 
+      const previousPendingPath = pendingRecording?.path;
       recorder.start();
       onPendingRecordingChange(null);
+      if (previousPendingPath) {
+        removeStoredFile(previousPendingPath).catch(() => {
+          setRecordingError('The old pending recording could not be deleted.');
+        });
+      }
       setRecordingState('recording');
     } catch {
       setRecordingState('blocked');
@@ -213,16 +256,13 @@ export function DetailView({
           <div className="cue-tool">
             {excerpt.pdfAttachment ? (
               <>
-                <a href={pdfObjectUrl ?? excerpt.pdfAttachment.dataUrl} target="_blank" rel="noreferrer">
+                <a href={pdfUrl ?? '#'} target="_blank" rel="noreferrer">
                   <span>PDF</span>
                   <strong>{excerpt.pdfAttachment.name}</strong>
                   <em>{pdfSize}</em>
                 </a>
                 <button type="button" onClick={() => fileInputRef.current?.click()}>Replace</button>
-                <button type="button" onClick={() => {
-                  if (!window.confirm('Remove this PDF from the excerpt?')) return;
-                  onChange({ pdfAttachment: null });
-                }}>
+                <button type="button" onClick={removePdf}>
                   Remove
                 </button>
               </>
@@ -241,12 +281,9 @@ export function DetailView({
               </button>
             ) : pendingRecording ? (
               <>
-                <audio controls src={pendingRecording.dataUrl} />
+                <audio controls src={pendingRecordingUrl ?? undefined} />
                 <button type="button" onClick={startRecording}>Replace</button>
-                <button type="button" onClick={() => {
-                  if (!window.confirm('Remove this pending recording?')) return;
-                  onPendingRecordingChange(null);
-                }}>
+                <button type="button" onClick={removePendingRecording}>
                   Remove
                 </button>
               </>
@@ -368,7 +405,7 @@ export function DetailView({
                       {entry.recording && (
                         <div className="history-recording">
                           <span>{entry.recording.name}</span>
-                          <audio controls src={entry.recording.dataUrl} />
+                          <audio controls src={historyRecordingUrls[entry.id]} />
                           <button
                             type="button"
                             className="icon-button danger-icon-button"

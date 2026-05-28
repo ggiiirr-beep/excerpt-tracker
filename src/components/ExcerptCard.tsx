@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Excerpt } from '../types';
 import { formatShortDate, relativePracticeDate } from '../lib/dates';
+import { signedFileUrl } from '../lib/fileStorage';
 import { Dot, Stars } from './Atoms';
 
 export function ExcerptCard({
@@ -21,9 +22,12 @@ export function ExcerptCard({
   const cardRef = useRef<HTMLElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const recentPracticeDetails = excerpt.practiceHistory
-    .filter((entry) => entry.note.trim() || entry.recording)
-    .slice(0, 3);
+  const [recordingUrls, setRecordingUrls] = useState<Record<string, string>>({});
+  const recentPracticeDetails = useMemo(() => (
+    excerpt.practiceHistory
+      .filter((entry) => entry.note.trim() || entry.recording)
+      .slice(0, 3)
+  ), [excerpt.practiceHistory]);
   const hasExpandedContent = recentPracticeDetails.length > 0;
 
   const toggleExpanded = () => {
@@ -42,6 +46,28 @@ export function ExcerptCard({
     document.addEventListener('pointerdown', closeMenuFromOutsideClick);
     return () => document.removeEventListener('pointerdown', closeMenuFromOutsideClick);
   }, [menuOpen]);
+
+  useEffect(() => {
+    let alive = true;
+
+    Promise.all(recentPracticeDetails.map(async (entry) => {
+      if (!entry.recording) return [entry.id, ''] as const;
+      if (!entry.recording.path) return [entry.id, entry.recording.dataUrl ?? ''] as const;
+
+      try {
+        return [entry.id, await signedFileUrl(entry.recording.path)] as const;
+      } catch {
+        return [entry.id, entry.recording.dataUrl ?? ''] as const;
+      }
+    })).then((entries) => {
+      if (!alive) return;
+      setRecordingUrls(Object.fromEntries(entries.filter(([, value]) => value)));
+    });
+
+    return () => {
+      alive = false;
+    };
+  }, [recentPracticeDetails]);
 
   return (
     <article
@@ -130,10 +156,10 @@ export function ExcerptCard({
               {entry.recording && (
                 <audio
                   controls
-                  src={entry.recording.dataUrl}
+                  src={recordingUrls[entry.id]}
                   onClick={(event) => event.stopPropagation()}
                 >
-                  <a href={entry.recording.dataUrl}>Open recording</a>
+                  {recordingUrls[entry.id] && <a href={recordingUrls[entry.id]}>Open recording</a>}
                 </audio>
               )}
             </div>

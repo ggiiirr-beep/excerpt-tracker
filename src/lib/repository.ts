@@ -1,6 +1,7 @@
 import type { AppData } from '../types';
 import { freshEmptyData, isStarterData } from './appData';
 import { loadCachedData, saveCachedData } from './cache';
+import { migrateEmbeddedFilesToStorage } from './fileStorage';
 import { supabase } from './supabaseClient';
 
 export type DataRepository = {
@@ -35,8 +36,13 @@ export class SupabaseDataRepository implements DataRepository {
         await this.save(userId, emptyData);
         return emptyData;
       }
-      saveCachedData(userId, data.data);
-      return data.data;
+      const migrated = await migrateEmbeddedFilesToStorage(userId, data.data);
+      if (migrated.changed) {
+        await this.save(userId, migrated.data);
+      } else {
+        saveCachedData(userId, migrated.data);
+      }
+      return migrated.data;
     }
 
     const seeded = cached && !isStarterData(cached) ? cached : freshEmptyData();
@@ -45,10 +51,11 @@ export class SupabaseDataRepository implements DataRepository {
   }
 
   async save(userId: string, data: AppData): Promise<void> {
-    saveCachedData(userId, data);
+    const migrated = await migrateEmbeddedFilesToStorage(userId, data);
+    saveCachedData(userId, migrated.data);
     const { error } = await supabase!
       .from('user_app_data')
-      .upsert({ user_id: userId, data, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+      .upsert({ user_id: userId, data: migrated.data, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
 
     if (error) throw error;
   }

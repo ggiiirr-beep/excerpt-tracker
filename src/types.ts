@@ -18,13 +18,16 @@ export type PracticeEntry = {
 export type PdfAttachment = {
   name: string;
   size: number;
-  dataUrl: string;
+  mimeType?: string;
+  path?: string;
+  dataUrl?: string;
 };
 
 export type SessionRecording = {
   name: string;
   mimeType: string;
-  dataUrl: string;
+  path?: string;
+  dataUrl?: string;
 };
 
 export type Excerpt = {

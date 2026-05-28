@@ -3,6 +3,7 @@ import type { User } from '@supabase/supabase-js';
 import type { AppData, ConfidenceRating, Excerpt, SessionRecording } from './types';
 import logoUrl from './assets/logo.png';
 import { freshEmptyData } from './lib/appData';
+import { removeExcerptFiles, removeStoredFile } from './lib/fileStorage';
 import { repository } from './lib/repository';
 import { supabase } from './lib/supabaseClient';
 import { relativePracticeDate, todayIso } from './lib/dates';
@@ -166,6 +167,10 @@ function SignedInApp({ user }: { user: User }) {
       setFormMode(null);
     }
     if (listMembershipExcerptId === id) setListMembershipExcerptId(null);
+    removeExcerptFiles(excerpt).catch((error) => {
+      setSyncState('error');
+      setSyncMessage(error instanceof Error ? error.message : 'The excerpt was deleted, but its stored files could not be removed.');
+    });
   };
 
   const saveEditedExcerpt = (value: Pick<Excerpt, 'title' | 'confidenceRating' | 'isFocus' | 'notes' | 'resources'>) => {
@@ -191,6 +196,7 @@ function SignedInApp({ user }: { user: User }) {
     if (!excerpt) return;
     const confirmed = window.confirm('Delete this practice session? Its note and recording will also be removed.');
     if (!confirmed) return;
+    const deletedRecordingPath = excerpt.practiceHistory.find((entry) => entry.id === entryId)?.recording?.path;
     const nextHistory = excerpt.practiceHistory.filter((entry) => entry.id !== entryId);
     const latestEntry = [...nextHistory].sort((a, b) => b.date.localeCompare(a.date))[0];
     updateExcerpt(excerptId, {
@@ -199,6 +205,10 @@ function SignedInApp({ user }: { user: User }) {
       lastPracticedDate: latestEntry?.date ?? null,
       ...(latestEntry ? { confidenceRating: latestEntry.rating } : {}),
     });
+    removeStoredFile(deletedRecordingPath).catch((error) => {
+      setSyncState('error');
+      setSyncMessage(error instanceof Error ? error.message : 'The session was deleted, but its recording file could not be removed.');
+    });
   };
 
   const deletePracticeRecording = (excerptId: string, entryId: string) => {
@@ -206,10 +216,15 @@ function SignedInApp({ user }: { user: User }) {
     if (!excerpt) return;
     const confirmed = window.confirm('Remove this recording from the practice session? The session will stay.');
     if (!confirmed) return;
+    const deletedRecordingPath = excerpt.practiceHistory.find((entry) => entry.id === entryId)?.recording?.path;
     updateExcerpt(excerptId, {
       practiceHistory: excerpt.practiceHistory.map((entry) => (
         entry.id === entryId ? { ...entry, recording: null } : entry
       )),
+    });
+    removeStoredFile(deletedRecordingPath).catch((error) => {
+      setSyncState('error');
+      setSyncMessage(error instanceof Error ? error.message : 'The recording was removed here, but its stored file could not be deleted.');
     });
   };
 
@@ -351,6 +366,7 @@ function SignedInApp({ user }: { user: User }) {
             onPendingRecordingChange={(recording) => {
               setPendingRecordings((current) => ({ ...current, [selectedExcerpt.id]: recording }));
             }}
+            userId={user.id}
           />
         ) : view === 'lists' ? (
           <ListsView
