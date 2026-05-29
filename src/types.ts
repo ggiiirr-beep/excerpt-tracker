@@ -21,6 +21,7 @@ export type PdfAttachment = {
   mimeType?: string;
   path?: string;
   dataUrl?: string;
+  annotations?: PdfAnnotationStroke[];
 };
 
 export type SessionRecording = {
@@ -28,6 +29,19 @@ export type SessionRecording = {
   mimeType: string;
   path?: string;
   dataUrl?: string;
+};
+
+export type PdfAnnotationPoint = {
+  x: number;
+  y: number;
+};
+
+export type PdfAnnotationStroke = {
+  id: string;
+  page: number;
+  color: string;
+  size: number;
+  points: PdfAnnotationPoint[];
 };
 
 export type Excerpt = {

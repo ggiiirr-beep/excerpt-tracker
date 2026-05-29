@@ -18,6 +18,11 @@ export function AuthGate({ children }: { children: (user: User) => ReactNode }) 
     }
     const client = supabase;
 
+    const clearBrokenSession = async () => {
+      await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
+      setSession(null);
+    };
+
     const finishAuth = async () => {
       const code = new URLSearchParams(window.location.search).get('code');
       const hash = new URLSearchParams(window.location.hash.slice(1));
@@ -33,31 +38,48 @@ export function AuthGate({ children }: { children: (user: User) => ReactNode }) 
       }
 
       if (accessToken && refreshToken) {
-        const { data, error } = await client.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-        if (error) {
-          setMessage(error.message);
-        } else {
-          setSession(data.session);
-          window.history.replaceState({}, document.title, '/');
+        try {
+          const { data, error } = await client.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (error) {
+            await clearBrokenSession();
+            setMessage(error.message);
+          } else {
+            setSession(data.session);
+            window.history.replaceState({}, document.title, '/');
+          }
+        } catch {
+          await clearBrokenSession();
+          setMessage('Your sign-in session expired. Please sign in again.');
         }
         setLoading(false);
         return;
       }
 
       if (code) {
-        const { data, error } = await client.auth.exchangeCodeForSession(code);
-        if (error) {
-          setMessage(error.message);
-        } else {
-          setSession(data.session);
-          window.history.replaceState({}, document.title, window.location.pathname);
+        try {
+          const { data, error } = await client.auth.exchangeCodeForSession(code);
+          if (error) {
+            await clearBrokenSession();
+            setMessage(error.message);
+          } else {
+            setSession(data.session);
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        } catch {
+          await clearBrokenSession();
+          setMessage('Your sign-in session expired. Please sign in again.');
         }
       } else {
-        const { data } = await client.auth.getSession();
-        setSession(data.session);
+        try {
+          const { data } = await client.auth.getSession();
+          setSession(data.session);
+        } catch {
+          await clearBrokenSession();
+          setMessage('Your saved sign-in expired. Please sign in again.');
+        }
       }
       setLoading(false);
     };

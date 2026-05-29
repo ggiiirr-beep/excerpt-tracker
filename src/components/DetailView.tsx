@@ -1,9 +1,10 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
-import type { Excerpt, RepertoireList, ResourceLink, SessionRecording } from '../types';
+import type { Excerpt, PdfAnnotationStroke, RepertoireList, ResourceLink, SessionRecording } from '../types';
 import { formatDate, formatShortDate, relativePracticeDate } from '../lib/dates';
 import { removeStoredFile, signedFileUrl, uploadPdfAttachment, uploadRecordingBlob } from '../lib/fileStorage';
 import { useFileUrl } from '../lib/useFileUrl';
 import { confidenceLabel, FieldLabel, makeId, Stars } from './Atoms';
+import { PdfAnnotator } from './PdfAnnotator';
 
 export function DetailView({
   excerpt,
@@ -214,6 +215,16 @@ export function DetailView({
     }
   };
 
+  const updatePdfAnnotations = (annotations: PdfAnnotationStroke[]) => {
+    if (!excerpt.pdfAttachment) return;
+    onChange({
+      pdfAttachment: {
+        ...excerpt.pdfAttachment,
+        annotations,
+      },
+    });
+  };
+
   return (
     <section className="detail-view">
       <button className="back-link" type="button" onClick={onBack}>‹ Excerpts</button>
@@ -256,11 +267,14 @@ export function DetailView({
           <div className="cue-tool">
             {excerpt.pdfAttachment ? (
               <>
-                <a href={pdfUrl ?? '#'} target="_blank" rel="noreferrer">
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('score-viewer')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                >
                   <span>PDF</span>
                   <strong>{excerpt.pdfAttachment.name}</strong>
                   <em>{pdfSize}</em>
-                </a>
+                </button>
                 <button type="button" onClick={() => fileInputRef.current?.click()}>Replace</button>
                 <button type="button" onClick={removePdf}>
                   Remove
@@ -301,6 +315,40 @@ export function DetailView({
       </div>
 
       <button className="primary-button practice-wide" type="button" onClick={onPractice}>Log practice</button>
+
+      {excerpt.pdfAttachment && (
+        <div className="score-section" id="score-viewer">
+          <div className="score-section-heading">
+            <div>
+              <FieldLabel>Score</FieldLabel>
+              <p>{excerpt.pdfAttachment.name}</p>
+            </div>
+            <div className="score-record-controls">
+              {recordingState === 'recording' ? (
+                <button className="record-button active" type="button" onClick={stopRecording}>Stop</button>
+              ) : (
+                <button className="record-button" type="button" onClick={startRecording}>Record</button>
+              )}
+              <button className="small-button" type="button" onClick={onPractice}>Log practice</button>
+            </div>
+          </div>
+          {pendingRecording && (
+            <div className="score-pending-recording">
+              <audio controls src={pendingRecordingUrl ?? undefined} />
+              <button type="button" onClick={removePendingRecording}>Remove</button>
+            </div>
+          )}
+          {pdfUrl ? (
+            <PdfAnnotator
+              pdfUrl={pdfUrl}
+              annotations={excerpt.pdfAttachment.annotations ?? []}
+              onChange={updatePdfAnnotations}
+            />
+          ) : (
+            <p className="pdf-status">Preparing score</p>
+          )}
+        </div>
+      )}
 
       <div className="details-panel">
         <label className="focus-check-row">
